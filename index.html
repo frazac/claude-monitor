@@ -137,7 +137,7 @@ function buildExplanationHTML() {
     (T.boundaryLabels[i] || '') + ' <span class="inline-icon">' + ICONS[iconKey] + '</span>'
   ).join(' · ');
   return '<p>' + T.explanation + '</p>' +
-    '<p>' + T.boundaryIntro + ' ' + boundaryLine + '</p>' +
+    '<p>' + T.boundaryIntro + ' ' + boundaryLine + '.</p>' +
     '<p>' + T.planSaved + ' (<a href="cookies.html">' + T.planSavedDetails + '</a>)' + T.planSavedRest + '</p>';
 }
 
