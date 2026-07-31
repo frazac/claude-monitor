@@ -1,0 +1,306 @@
+#!/usr/bin/env python3
+import datetime
+import glob
+import json
+import os
+import sys
+import time
+
+SEGMENTS = 6  # 5 giorni lavorativi standard + 1 extra, domenica esclusa
+DAILY_QUOTA_PCT = 100 / SEGMENTS  # quota fissa di budget settimanale per giorno (~17%)
+WEEKDAY_LETTERS = ["L", "M", "M", "G", "V", "S", "D"]  # date.weekday(): 0=lunedì ... 6=domenica
+
+WEB_STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "state.json")
+WORKED_CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "worked_cache.json")
+CLAUDE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
+WORK_THRESHOLD_MINUTES = 15  # minuti distinti di attività per considerare uno slot "lavorato"
+WORKED_CACHE_TTL = 60  # secondi: non ri-scansionare i log più spesso di così
+SLOT_BOUNDS = {"mattina": (0, 12), "pomeriggio": (12, 19), "sera": (19, 24)}
+TICK_FULL = "█"
+TICK_EMPTY = "░"
+RED = "\033[31m"
+GREEN = "\033[32m"
+CYAN = "\033[36m"
+RESET = "\033[0m"
+
+
+MORNING_THRESHOLD_HOUR = 11  # reset entro quest'ora: il giorno di window_start conta per intero come giorno 1
+
+def calendar_segments(window_start_epoch):
+    """Le 6 date della finestra di 7gg che non cadono di domenica, in ordine cronologico.
+
+    window_start è l'istante esatto in cui la finestra precedente è scaduta. Se quell'istante
+    cade tardi nel giorno (es. mercoledì 23:00), la fetta di giorno rimasta (dalle 23 a
+    mezzanotte) è trascurabile e non conta come tacca: il giorno 1 diventa il giorno
+    successivo. Se invece cade la mattina presto (es. entro le 11), la maggior parte di
+    quel giorno è già dentro la finestra corrente, quindi conta per intero come giorno 1.
+    """
+    window_start_dt = datetime.datetime.fromtimestamp(window_start_epoch)
+    if window_start_dt.hour < MORNING_THRESHOLD_HOUR:
+        start_date = window_start_dt.date()
+    else:
+        start_date = window_start_dt.date() + datetime.timedelta(days=1)
+    days = []
+    for offset in range(7):
+        d = start_date + datetime.timedelta(days=offset)
+        if d.weekday() == 6:  # domenica: giorno di riposo, non è una tacca
+            continue
+        days.append(d)
+    return days
+
+
+def all_seven_days(window_start_epoch):
+    """Tutti e 7 i giorni della finestra (domenica inclusa), stesso algoritmo usato lato web
+    per il calendario di pianificazione (vedi computeSevenDays in index.html)."""
+    window_start_dt = datetime.datetime.fromtimestamp(window_start_epoch)
+    if window_start_dt.hour < MORNING_THRESHOLD_HOUR:
+        start_date = window_start_dt.date()
+    else:
+        start_date = window_start_dt.date() + datetime.timedelta(days=1)
+    return [start_date + datetime.timedelta(days=offset) for offset in range(7)]
+
+
+def slot_for_hour(hour_float):
+    for key, (start, end) in SLOT_BOUNDS.items():
+        if start <= hour_float < end:
+            return key
+    return "sera"
+
+
+def load_worked_cache():
+    try:
+        with open(WORKED_CACHE_FILE) as f:
+            cache = json.load(f)
+    except Exception:
+        cache = {}
+    cache.setdefault("offsets", {})
+    cache.setdefault("minutes", {})
+    cache.setdefault("worked", {})
+    cache.setdefault("last_update", 0)
+    cache.setdefault("last_window_start", None)
+    return cache
+
+
+def save_worked_cache(cache):
+    try:
+        os.makedirs(os.path.dirname(WORKED_CACHE_FILE), exist_ok=True)
+        with open(WORKED_CACHE_FILE, "w") as f:
+            json.dump(cache, f)
+    except Exception:
+        pass  # cache best-effort, non deve mai rompere la statusline
+
+
+def compute_worked_slots(window_start_epoch, resets_at_epoch):
+    """Legge in modo incrementale le sessioni Claude Code (~/.claude/projects/*/*.jsonl) e
+    determina quali slot (giorno+fascia) hanno più di WORK_THRESHOLD_MINUTES minuti distinti
+    di attività, usando i timestamp dei messaggi come proxy del tempo lavorato.
+
+    Per non appesantire la statusline: rilettura throttled a WORKED_CACHE_TTL secondi, e ogni
+    file viene riletto solo dal byte-offset dove si era arrivati l'ultima volta.
+    """
+    try:
+        cache = load_worked_cache()
+        now = time.time()
+        if (
+            now - cache.get("last_update", 0) < WORKED_CACHE_TTL
+            and cache.get("last_window_start") == window_start_epoch
+        ):
+            return cache.get("worked", {})
+
+        offsets = cache["offsets"]
+        minutes = {k: set(v) for k, v in cache["minutes"].items()}
+
+        day_dates = {d.isoformat() for d in all_seven_days(window_start_epoch)}
+        for key in list(minutes.keys()):
+            if key.split(":")[0] not in day_dates:
+                del minutes[key]
+
+        pattern = os.path.join(CLAUDE_PROJECTS_DIR, "*", "*.jsonl")
+        paths = glob.glob(pattern)
+
+        seen_paths = set()
+        for path in paths:
+            try:
+                mtime = os.path.getmtime(path)
+            except OSError:
+                continue
+            if mtime < window_start_epoch - 86400:
+                continue
+            seen_paths.add(path)
+
+            try:
+                size = os.path.getsize(path)
+                start_offset = offsets.get(path, 0)
+                if start_offset > size:
+                    start_offset = 0  # file troncato o riscritto
+                with open(path, "r") as f:
+                    f.seek(start_offset)
+                    new_data = f.read()
+                offsets[path] = size
+            except OSError:
+                continue
+
+            for line in new_data.splitlines():
+                if '"timestamp"' not in line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except Exception:
+                    continue
+                raw_ts = entry.get("timestamp")
+                if not raw_ts:
+                    continue
+                try:
+                    dt_utc = datetime.datetime.strptime(raw_ts, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    dt_utc = dt_utc.replace(tzinfo=datetime.timezone.utc)
+                except ValueError:
+                    continue
+                dt_local = dt_utc.astimezone()
+                epoch = dt_local.timestamp()
+                if epoch < window_start_epoch or epoch >= resets_at_epoch:
+                    continue
+                d_str = dt_local.date().isoformat()
+                if d_str not in day_dates:
+                    continue
+                slot = slot_for_hour(dt_local.hour + dt_local.minute / 60)
+                key = d_str + ":" + slot
+                minutes.setdefault(key, set()).add(dt_local.hour * 60 + dt_local.minute)
+
+        for path in list(offsets.keys()):
+            if path not in seen_paths:
+                del offsets[path]
+
+        worked = {key: True for key, mins in minutes.items() if len(mins) > WORK_THRESHOLD_MINUTES}
+
+        cache["offsets"] = offsets
+        cache["minutes"] = {k: sorted(v) for k, v in minutes.items()}
+        cache["worked"] = worked
+        cache["last_update"] = now
+        cache["last_window_start"] = window_start_epoch
+        save_worked_cache(cache)
+        return worked
+    except Exception:
+        return {}  # i log di lavoro sono un extra, non devono mai rompere la statusline
+
+
+def build_bar(used_pct, current_index):
+    filled = round(used_pct / 100 * SEGMENTS)
+    filled = max(0, min(SEGMENTS, filled))
+    chars = []
+    for i in range(1, SEGMENTS + 1):
+        char = TICK_FULL if i <= filled else TICK_EMPTY
+        char = f"[{char}]" if i == current_index else f" {char} "
+        chars.append(char)
+    return "".join(chars)
+
+
+def write_web_state(payload):
+    try:
+        os.makedirs(os.path.dirname(WEB_STATE_FILE), exist_ok=True)
+        with open(WEB_STATE_FILE, "w") as f:
+            json.dump(payload, f)
+    except Exception:
+        pass  # il dashboard web è un extra, non deve mai rompere la statusline
+
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+    except Exception:
+        print("claude-monitor: no input")
+        return
+
+    model = data.get("model", {}).get("display_name", "?")
+    rate_limits = data.get("rate_limits") or {}
+    seven_day = rate_limits.get("seven_day")
+    five_hour = rate_limits.get("five_hour") or {}
+    five_hour_pct = five_hour.get("used_percentage")
+    five_hour_resets_at = five_hour.get("resets_at")
+
+    if not seven_day:
+        print(f"[{model}] limite settimanale: n/d")
+        write_web_state({"status": "n/d", "model": model, "updated_at": time.time()})
+        return
+
+    used_pct = seven_day.get("used_percentage", 0)
+    resets_at = seven_day.get("resets_at")
+
+    if not resets_at:
+        print(f"[{model}] {used_pct:.0f}% (7gg)")
+        write_web_state({
+            "status": "no_reset_info",
+            "model": model,
+            "used_pct": used_pct,
+            "five_hour_pct": five_hour_pct,
+            "five_hour_resets_at": five_hour_resets_at,
+            "updated_at": time.time(),
+        })
+        return
+
+    window_start = resets_at - 7 * 86400
+    days = calendar_segments(window_start)  # 6 date, domenica esclusa
+    today = datetime.date.today()
+
+    current_index = None
+    for i, d in enumerate(days, start=1):
+        if d == today:
+            current_index = i
+            break
+
+    day_labels = [WEEKDAY_LETTERS[d.weekday()] for d in days]
+
+    bar = build_bar(used_pct, current_index)
+
+    target_pct = (current_index or 0) * DAILY_QUOTA_PCT
+    over_pace = current_index is not None and used_pct > target_pct
+    color = RED if over_pace else GREEN
+    pace_msg = (
+        f" ⚠ sopra limite (obiettivo oggi {target_pct:.0f}%)" if over_pace
+        else f" ✓ sotto limite (obiettivo oggi {target_pct:.0f}%)" if current_index is not None
+        else ""
+    )
+
+    now = datetime.datetime.now()
+    day_fraction = (now.hour * 3600 + now.minute * 60 + now.second) / 86400
+
+    reset_date_str = time.strftime("%d/%m/%Y %H:%M", time.localtime(resets_at))
+    five_hour_reset_str = (
+        time.strftime("%d/%m/%Y %H:%M", time.localtime(five_hour_resets_at)) if five_hour_resets_at else None
+    )
+    five_hour_line = (
+        f" · 5h {five_hour_pct:.0f}% (reset {five_hour_reset_str})"
+        if five_hour_pct is not None and five_hour_reset_str
+        else ""
+    )
+
+    tacca_str = f"tacca {current_index}/{SEGMENTS}" if current_index else "oggi è riposo (domenica)"
+
+    worked_slots = compute_worked_slots(window_start, resets_at)
+
+    print(
+        f"{CYAN}[{model}]{RESET} {bar} "
+        f"{color}{used_pct:.0f}%{RESET} "
+        f"({tacca_str}, quota {DAILY_QUOTA_PCT:.0f}%/g, reset {reset_date_str}){pace_msg}{five_hour_line}"
+    )
+
+    write_web_state({
+        "status": "ok",
+        "model": model,
+        "used_pct": used_pct,
+        "current_index": current_index,
+        "segments": SEGMENTS,
+        "day_labels": day_labels,
+        "daily_quota_pct": DAILY_QUOTA_PCT,
+        "target_pct": target_pct,
+        "over_pace": over_pace,
+        "day_fraction": day_fraction,
+        "reset_date": reset_date_str,
+        "five_hour_pct": five_hour_pct,
+        "five_hour_reset_date": five_hour_reset_str,
+        "worked_slots": worked_slots,
+        "updated_at": time.time(),
+    })
+
+
+if __name__ == "__main__":
+    main()

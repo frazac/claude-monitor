@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Claude usage monitor</title>
+<style>
+  :root {
+    --bg: #fff; --fg: #000; --muted: #666;
+    --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08);
+    --over: #c81450; --under: #2e8b7b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
+  }
+  :root[data-theme="dark"] { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
+  :root[data-theme="light"] { --bg: #fff; --fg: #000; --muted: #666; --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08); --over: #c81450; --under: #2e8b7b; }
+
+  body {
+    font-family: monospace;
+    background: var(--bg);
+    color: var(--fg);
+    margin: 3rem auto;
+    max-width: 600px;
+    padding: 0 1rem;
+  }
+  h1 { font-size: 0.9rem; font-weight: normal; opacity: 0.6; margin: 0 0 0.4rem 0; }
+  .tagline { font-size: 0.8rem; opacity: 0.55; margin: 0 0 1.5rem 0; line-height: 1.4; }
+
+  .hairline { border-top: 1px solid var(--border); }
+
+  .stats { list-style: none; margin: 0 0 1.5rem 0; padding: 0; color: var(--muted); }
+  .stats li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: 0.8rem;
+  }
+  .stats li.stat-with-bar { display: block; padding: 6px 0; }
+  .stats li.stat-with-bar .stat-row { display: flex; justify-content: space-between; align-items: baseline; }
+
+  .bar-track { margin-top: 6px; height: 8px; border: 1px solid var(--fg); box-sizing: border-box; }
+  .bar-fill { height: 100%; background: var(--fg); }
+  .sub-line { font-size: 0.8rem; opacity: 0.7; margin-top: 4px; }
+
+  .stats li.over, .stats li.over .stat-key, .stats li.over .stat-val { color: var(--over); }
+  .stats li.under, .stats li.under .stat-key, .stats li.under .stat-val { color: var(--under); }
+
+  .section-title { font-size: 0.8rem; color: var(--muted); padding: 0.8rem 0 0.6rem 0; }
+
+  /* pianificazione */
+  .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  .reset-btn, .save-btn, .format-btn {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: inherit;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  .reset-btn:hover, .save-btn:hover, .format-btn:hover { opacity: 1; }
+  .name-input, .load-select, .tz-select {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: inherit;
+    padding: 0.4rem 0.5rem;
+  }
+  .name-input { width: 9rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 28px repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .daycol-head { font-size: 0.8rem; color: var(--muted); text-align: center; padding-top: 4px; }
+  .daycol-head .date { font-size: 0.8rem; }
+  .daycol-head .today-target { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
+
+  .axis-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+  }
+  .axis-cell svg { width: 14px; height: 14px; display: block; }
+
+  .tile {
+    height: 46px;
+    border: 1px solid var(--border);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.1;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  .tile.active { background: var(--tile-fill); }
+  .tile.inactive { background: transparent; opacity: 0.5; }
+  .tile.current { border: 2px solid var(--fg); }
+  .tile.worked::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 3px;
+    background: var(--fg);
+  }
+
+  .legend { display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { position: relative; display: inline-block; width: 16px; height: 16px; border: 1px solid var(--border); box-sizing: border-box; }
+  .legend-swatch.fill { background: var(--tile-fill); }
+  .legend-swatch.track::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--fg); }
+
+  .now-marker {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    width: 2px;
+    background: #c00;
+    transform: translateX(-1px);
+  }
+
+  .explanation { font-size: 0.8rem; opacity: 0.5; line-height: 1.5; margin-bottom: 1.5rem; }
+
+  .updated { opacity: 0.4; font-size: 0.8rem; margin-top: 1rem; }
+
+  .footer-controls { display: flex; align-items: center; gap: 0.6rem; margin: 1.5rem 0 0.6rem 0; flex-wrap: wrap; }
+  .theme-switch {
+    width: 40px; height: 22px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--muted);
+  }
+  .theme-switch .icon-sun, .theme-switch .icon-moon {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px;
+  }
+  .theme-switch .icon-sun { left: 4px; }
+  .theme-switch .icon-moon { right: 4px; }
+  .theme-switch .knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--fg);
+    transition: transform 0.2s ease;
+  }
+
+  .footer { font-size: 0.8rem; opacity: 0.4; padding-top: 0.8rem; }
+  .footer a { color: inherit; }
+</style>
+</head>
+<body>
+  <h1 id="title">claude usage monitor</h1>
+  <div class="tagline" id="tagline"></div>
+
+  <ul class="stats" id="main-stats">
+    <li class="hairline stat-with-bar">
+      <div class="stat-row"><span class="stat-key" id="lbl-session">uso sessione</span><span class="stat-val" id="hour-pct">--%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="hour-bar-fill" style="width:0%"></div></div>
+      <div class="sub-line"><span id="lbl-session-reset">reset sessione</span>: <span id="hour-reset">--</span></div>
+    </li>
+    <li class="hairline stat-with-bar">
+      <div class="stat-row"><span class="stat-key" id="lbl-week">uso settimana</span><span class="stat-val" id="week-pct">--%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="week-bar-fill" style="width:0%"></div></div>
+      <div class="sub-line"><span id="lbl-week-reset">reset settimana</span>: <span id="week-reset">--</span></div>
+    </li>
+    <li class="hairline" id="threshold-row"><span class="stat-key" id="lbl-threshold">soglia attuale</span><span class="stat-val" id="threshold">--</span></li>
+    <li class="hairline"><span class="stat-key" id="lbl-plan-target-slot">soglia di fine slot</span><span class="stat-val" id="plan-target-slot">--%</span></li>
+    <li class="hairline"><span class="stat-key" id="lbl-plan-target-day">soglia di fine giornata</span><span class="stat-val" id="plan-target-day">--%</span></li>
+  </ul>
+
+  <div class="toolbar">
+    <button class="reset-btn" id="reset-plan">reset piano</button>
+    <input class="name-input" id="plan-name" type="text" placeholder="nome piano">
+    <button class="save-btn" id="save-plan">salva piano con nome</button>
+    <select class="load-select" id="load-plan">
+      <option value="" id="load-plan-default">carica piano salvato…</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-swatch fill"></span><span id="lbl-legend-plan">pianificazione</span></span>
+    <span class="legend-item"><span class="legend-swatch track"></span><span id="lbl-legend-log">log data</span></span>
+  </div>
+
+  <div class="explanation" id="explanation"></div>
+
+  <div class="updated" id="updated"></div>
+
+  <div class="hairline footer-controls">
+    <button class="theme-switch" id="theme-switch" aria-label="toggle theme" title="light / dark">
+      <span class="icon-sun" id="icon-sun"></span>
+      <span class="icon-moon" id="icon-moon"></span>
+      <span class="knob" id="theme-knob"></span>
+    </button>
+    <select class="tz-select" id="tz-select"></select>
+    <button class="format-btn" id="format-toggle">24h</button>
+  </div>
+
+  <div class="footer">MIT License · © 2026 Francesco Zaccaria · <a href="LICENSE" target="_blank" rel="noopener">LICENSE</a><br>icone: thanks to <a href="https://iconoir.com/" target="_blank" rel="noopener">iconoir.com</a> &amp; <a href="https://lucide.dev/" target="_blank" rel="noopener">lucide.dev</a></div>
+
+<script>
+const LOCALE = (navigator.language || 'en').toLowerCase().startsWith('it') ? 'it' : 'en';
+
+const ICONS = {
+  coffee: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 11.6V15C17 18.3137 14.3137 21 11 21H9C5.68629 21 3 18.3137 3 15V11.6C3 11.2686 3.26863 11 3.6 11H16.4C16.7314 11 17 11.2686 17 11.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 9C12 8 12.7143 7 14.1429 7V7C15.7208 7 17 5.72081 17 4.14286V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 9V8.5C8 6.84315 9.34315 5.5 11 5.5V5.5C12.1046 5.5 13 4.60457 13 3.5V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 11H18.5C19.8807 11 21 12.1193 21 13.5C21 14.8807 19.8807 16 18.5 16H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  apple: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1471 21.2646L12 21.2351L11.8529 21.2646C9.47627 21.7399 7.23257 21.4756 5.59352 20.1643C3.96312 18.86 2.75 16.374 2.75 12C2.75 7.52684 3.75792 5.70955 5.08541 5.04581C5.77977 4.69863 6.67771 4.59759 7.82028 4.72943C8.96149 4.86111 10.2783 5.21669 11.7628 5.71153L12.0235 5.79841L12.2785 5.69638C14.7602 4.70367 16.9909 4.3234 18.5578 5.05463C20.0271 5.7403 21.25 7.59326 21.25 12C21.25 16.374 20.0369 18.86 18.4065 20.1643C16.7674 21.4756 14.5237 21.7399 12.1471 21.2646Z" stroke="currentColor" stroke-width="1.5"></path><path d="M12 5.5C12 3 11 2 9 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 6V21" stroke="currentColor" stroke-width="1.5"></path><path d="M15 12L15 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  pizza: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 9.01L14.01 8.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 8.01L8.01 7.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 14.01L8.01 13.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 19L2.23626 3.0041C2.13087 2.55618 2.54815 2.16122 2.98961 2.29106L19 7" stroke="currentColor" stroke-width="1.5"></path><path d="M22.198 8.42467C22.4324 7.48703 21.8623 6.5369 20.9247 6.30249C19.987 6.06808 19.0369 6.63816 18.8025 7.5758C18.4106 9.14318 16.9015 11.6241 14.5753 13.9503C12.2743 16.2513 9.42714 18.1442 6.60672 18.7951C5.66497 19.0124 5.07771 19.952 5.29504 20.8937C5.51236 21.8355 6.45198 22.4227 7.39373 22.2054C11.0734 21.3563 14.4762 18.9991 17.0502 16.4252C19.5989 13.8764 21.5898 10.8573 22.198 8.42467Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>',
+  bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 12L23 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 2V1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 23V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 20L19 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 4L19 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 20L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1 12L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5066C3 16.7497 7.25034 21 12.4934 21C16.2209 21 19.4466 18.8518 21 15.7259C12.4934 15.7259 8.27411 11.5066 8.27411 3C5.14821 4.55344 3 7.77915 3 11.5066Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+};
+
+const STRINGS = {
+  it: {
+    title: 'claude usage monitor',
+    tagline: 'Monitora in tempo reale l\'uso di Claude (sessione e settimana) e pianifica i tuoi slot di lavoro.',
+    session: 'uso sessione',
+    week: 'uso settimana',
+    targetDay: 'obiettivo giorno',
+    weekReset: 'reset settimana',
+    sessionReset: 'reset sessione',
+    threshold: 'soglia attuale',
+    overLimit: 'sopra limite',
+    underLimit: 'sotto limite',
+    planTargetSlot: 'soglia di fine slot',
+    planTargetDay: 'soglia di fine giornata',
+    resetPlan: 'reset piano',
+    planNamePlaceholder: 'nome piano',
+    savePlan: 'salva piano con nome',
+    loadPlanDefault: 'carica piano salvato…',
+    explanation: 'clicca uno slot per attivarlo o disattivarlo: i numeri progressivi indicano l\'ordine degli slot attivi nella settimana, "–" indica uno slot non selezionato. la scala a sinistra segna i confini della giornata: caffè (sveglia), mela (pranzo), pizza (cena), letto (a nanna). il piano resta salvato nel browser; puoi salvarne più versioni con un nome.',
+    updatedPrefix: 'aggiornato ',
+    noApiResponse: 'nessuna risposta API in questa sessione',
+    waitingData: 'in attesa di dati',
+    stateNotFound: 'data/state.json non trovato',
+    activate: 'clicca per attivare',
+    deactivate: 'clicca per disattivare',
+    dow: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
+    localeCode: 'it-IT',
+    localTz: 'locale',
+    legendPlan: 'pianificazione',
+    legendLog: 'log data',
+    inPrefix: 'tra ',
+    hourUnit: 'h',
+    dayUnit: ' gg',
+  },
+  en: {
+    title: 'claude usage monitor',
+    tagline: 'Monitor your Claude usage in real time (session and week) and plan your weekly work slots.',
+    session: 'session usage',
+    week: 'week usage',
+    targetDay: 'day target',
+    weekReset: 'week reset',
+    sessionReset: 'session reset',
+    threshold: 'current pace',
+    overLimit: 'over limit',
+    underLimit: 'under limit',
+    planTargetSlot: 'end-of-slot threshold',
+    planTargetDay: 'end-of-day threshold',
+    resetPlan: 'reset plan',
+    planNamePlaceholder: 'plan name',
+    savePlan: 'save plan as',
+    loadPlanDefault: 'load saved plan…',
+    explanation: 'click a slot to toggle it: the numbers show the order of active slots through the week, "–" means the slot isn\'t selected. the axis on the left marks the boundaries of the day: coffee (wake up), apple (lunch), pizza (dinner), bed (sleep). the plan is saved in your browser; you can save several named versions.',
+    updatedPrefix: 'updated ',
+    noApiResponse: 'no API response in this session',
+    waitingData: 'waiting for data',
+    stateNotFound: 'data/state.json not found',
+    activate: 'click to activate',
+    deactivate: 'click to deactivate',
+    dow: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    localeCode: 'en-GB',
+    localTz: 'local',
+    legendPlan: 'plan',
+    legendLog: 'log data',
+    inPrefix: 'in ',
+    hourUnit: 'h',
+    dayUnit: 'd',
+  },
+};
+const T = STRINGS[LOCALE];
+
+const POLL_MS = 5000;
+const PLAN_KEY = 'claude-monitor-plan';
+const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
+const THEME_KEY = 'claude-monitor-theme';
+const TZ_KEY = 'claude-monitor-tz';
+const HOUR12_KEY = 'claude-monitor-hour12';
+const SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
+const TIMEZONES = ['local', 'UTC', 'Europe/Rome', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'Asia/Shanghai'];
+
+let planDays = null; // costruito una volta noto resets_at
+let lastData = null; // ultimo state.json valido, per riformattare gli orari senza ripollare
+
+function applyStrings() {
+  document.documentElement.lang = LOCALE;
+  document.title = T.title;
+  document.getElementById('title').textContent = T.title;
+  document.getElementById('tagline').textContent = T.tagline;
+  document.getElementById('lbl-session').textContent = T.session;
+  document.getElementById('lbl-week').textContent = T.week;
+  document.getElementById('lbl-week-reset').textContent = T.weekReset;
+  document.getElementById('lbl-session-reset').textContent = T.sessionReset;
+  document.getElementById('lbl-threshold').textContent = T.threshold;
+  document.getElementById('lbl-plan-target-slot').textContent = T.planTargetSlot;
+  document.getElementById('lbl-plan-target-day').textContent = T.planTargetDay;
+  document.getElementById('lbl-legend-plan').textContent = T.legendPlan;
+  document.getElementById('lbl-legend-log').textContent = T.legendLog;
+  document.getElementById('reset-plan').textContent = T.resetPlan;
+  document.getElementById('plan-name').placeholder = T.planNamePlaceholder;
+  document.getElementById('save-plan').textContent = T.savePlan;
+  document.getElementById('load-plan-default').textContent = T.loadPlanDefault;
+  document.getElementById('explanation').textContent = T.explanation;
+  document.getElementById('icon-sun').innerHTML = ICONS.sun;
+  document.getElementById('icon-moon').innerHTML = ICONS.moon;
+}
+
+function parseResetDate(str) {
+  // formato "dd/mm/yyyy HH:MM"
+  const [datePart, timePart] = str.split(' ');
+  const [dd, mm, yyyy] = datePart.split('/').map(Number);
+  const [HH, MI] = timePart.split(':').map(Number);
+  return new Date(yyyy, mm - 1, dd, HH, MI, 0);
+}
+
+function dateOnly(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function isoDateLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function computeSevenDays(resetsAt) {
+  const windowStart = new Date(resetsAt.getTime() - 7 * 86400 * 1000);
+  let startDate;
+  if (windowStart.getHours() < 11) {
+    startDate = dateOnly(windowStart);
+  } else {
+    startDate = new Date(dateOnly(windowStart).getTime() + 86400 * 1000);
+  }
+  const result = [];
+  for (let offset = 0; offset < 7; offset++) {
+    result.push(new Date(startDate.getTime() + offset * 86400 * 1000));
+  }
+  return result;
+}
+
+function loadPlan() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAN_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePlan(plan) {
+  localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+}
+
+function loadNamedPlans() {
+  try {
+    return JSON.parse(localStorage.getItem(NAMED_PLANS_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveNamedPlans(named) {
+  localStorage.setItem(NAMED_PLANS_KEY, JSON.stringify(named));
+}
+
+// le chiavi di piano usano il numero del giorno (0-6, come Date.getDay()) e non
+// l'abbreviazione localizzata, così il piano salvato non dipende dalla lingua.
+function defaultActive(weekdayNum, key) {
+  if (weekdayNum === 0 || weekdayNum === 6) return false; // domenica, sabato
+  return key === 'mattina' || key === 'pomeriggio';
+}
+
+function buildDayModel(dates, plan) {
+  return dates.map(d => {
+    const weekdayNum = d.getDay();
+    const slots = SLOT_KEYS.map(key => {
+      const planKey = weekdayNum + ':' + key;
+      const active = Object.prototype.hasOwnProperty.call(plan, planKey) ? plan[planKey] : defaultActive(weekdayNum, key);
+      return { key, active };
+    });
+    return { date: d, weekdayNum, slots };
+  });
+}
+
+function persistPlan(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.weekdayNum + ':' + slot.key] = slot.active; });
+  });
+  savePlan(plan);
+}
+
+function planSnapshot(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.weekdayNum + ':' + slot.key] = slot.active; });
+  });
+  return plan;
+}
+
+const SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
+
+function flatten(days) {
+  const tiles = [];
+  days.forEach((day, dayIdx) => {
+    day.slots.forEach((slot, slotIdx) => tiles.push({ day, dayIdx, slot, slotIdx }));
+  });
+  return tiles;
+}
+
+function computePlanTargets(days, now) {
+  const all = flatten(days);
+  const total = all.filter(t => t.slot.active).length;
+  const weight = total > 0 ? 100 / total : 0;
+  const today = dateOnly(now);
+  const nowHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+
+  let targetDay = 0;
+  let targetSlot = 0;
+  let currentTile = null;
+  let counter = 0;
+  const numbering = new Map(); // "dayIdx:slotKey" -> numero progressivo
+
+  for (const t of all) {
+    if (t.slot.active) {
+      counter++;
+      numbering.set(t.dayIdx + ':' + t.slot.key, counter);
+    }
+    const tDate = dateOnly(t.day.date);
+    if (tDate.getTime() < today.getTime()) {
+      if (t.slot.active) { targetDay += weight; targetSlot += weight; }
+    } else if (tDate.getTime() === today.getTime()) {
+      if (t.slot.active) targetDay += weight;
+      const b = SLOT_BOUNDS[t.slot.key];
+      if (nowHour >= b.start) {
+        if (t.slot.active) targetSlot += weight;
+      }
+      if (nowHour >= b.start && nowHour < b.end) {
+        const fraction = (nowHour - b.start) / (b.end - b.start);
+        currentTile = { dayIdx: t.dayIdx, slotKey: t.slot.key, fraction };
+      }
+    }
+  }
+  return { total, weight, targetDay, targetSlot, currentTile, numbering };
+}
+
+function renderPlan() {
+  if (!planDays) return;
+  const now = new Date();
+  const { targetDay, targetSlot, currentTile, numbering } = computePlanTargets(planDays, now);
+
+  document.getElementById('plan-target-slot').textContent = targetSlot.toFixed(0) + '%';
+  document.getElementById('plan-target-day').textContent = targetDay.toFixed(0) + '%';
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  // riga di intestazione: cella vuota per l'asse + 7 giorni
+  const spacer = document.createElement('div');
+  spacer.style.gridColumn = '1';
+  spacer.style.gridRow = '1';
+  grid.appendChild(spacer);
+
+  const today = dateOnly(now);
+  planDays.forEach((day, dayIdx) => {
+    const head = document.createElement('div');
+    head.className = 'daycol-head';
+    head.style.gridColumn = String(dayIdx + 2);
+    head.style.gridRow = '1';
+    const isToday = dateOnly(day.date).getTime() === today.getTime();
+    const todayTarget = (isToday && lastData && lastData.status === 'ok')
+      ? '<div class="today-target" title="' + T.targetDay + '">' + lastData.target_pct.toFixed(0) + '%</div>' : '';
+    head.innerHTML = '<div class="dow">' + T.dow[day.weekdayNum] + '</div><div class="date">' +
+      String(day.date.getDate()).padStart(2, '0') + '/' + String(day.date.getMonth() + 1).padStart(2, '0') + '</div>' + todayTarget;
+    grid.appendChild(head);
+  });
+
+  // asse verticale: un'unica cella che copre le 3 righe di slot, con le icone
+  // posizionate ai *confini* tra gli slot (inizio, tra 1-2, tra 2-3, fine) e non
+  // centrate sugli slot stessi.
+  const axis = document.createElement('div');
+  axis.className = 'axis-cell';
+  axis.style.gridColumn = '1';
+  axis.style.gridRow = '2 / span 3';
+  axis.innerHTML = ICONS.coffee + ICONS.apple + ICONS.pizza + ICONS.bed;
+  grid.appendChild(axis);
+
+  for (let row = 0; row < 3; row++) {
+    planDays.forEach((day, dayIdx) => {
+      const slot = day.slots[row];
+      const cell = document.createElement('div');
+      const workedKey = isoDateLocal(day.date) + ':' + slot.key;
+      const worked = !!(lastData && lastData.worked_slots && lastData.worked_slots[workedKey]);
+      cell.className = 'tile ' + (slot.active ? 'active' : 'inactive') + (worked ? ' worked' : '');
+      cell.style.gridColumn = String(dayIdx + 2);
+      cell.style.gridRow = String(row + 2);
+      const num = numbering.get(dayIdx + ':' + slot.key);
+      cell.textContent = slot.active ? String(num) : '–';
+      cell.title = (slot.active ? T.deactivate : T.activate);
+
+      cell.addEventListener('click', () => {
+        slot.active = !slot.active;
+        persistPlan(planDays);
+        renderPlan();
+      });
+
+      const isCurrent = currentTile && currentTile.dayIdx === dayIdx && currentTile.slotKey === slot.key;
+      if (isCurrent) {
+        cell.classList.add('current');
+        const marker = document.createElement('div');
+        marker.className = 'now-marker';
+        marker.style.left = (currentTile.fraction * 100) + '%';
+        cell.appendChild(marker);
+      }
+
+      grid.appendChild(cell);
+    });
+  }
+}
+
+function refreshLoadSelect() {
+  const select = document.getElementById('load-plan');
+  const named = loadNamedPlans();
+  const names = Object.keys(named).sort();
+  select.innerHTML = '<option value="">' + T.loadPlanDefault + '</option>' +
+    names.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+}
+
+function setupPlanToolbar() {
+  document.getElementById('reset-plan').addEventListener('click', () => {
+    localStorage.removeItem(PLAN_KEY);
+    if (planDays) {
+      planDays.forEach(day => day.slots.forEach(slot => { slot.active = defaultActive(day.weekdayNum, slot.key); }));
+      persistPlan(planDays);
+    }
+    renderPlan();
+  });
+
+  document.getElementById('save-plan').addEventListener('click', () => {
+    const input = document.getElementById('plan-name');
+    const name = input.value.trim();
+    if (!name || !planDays) return;
+    const named = loadNamedPlans();
+    named[name] = planSnapshot(planDays);
+    saveNamedPlans(named);
+    refreshLoadSelect();
+    document.getElementById('load-plan').value = name;
+    input.value = '';
+  });
+
+  document.getElementById('load-plan').addEventListener('change', e => {
+    const name = e.target.value;
+    if (!name || !planDays) return;
+    const named = loadNamedPlans();
+    const snapshot = named[name];
+    if (!snapshot) return;
+    planDays.forEach(day => day.slots.forEach(slot => {
+      const key = day.weekdayNum + ':' + slot.key;
+      slot.active = Object.prototype.hasOwnProperty.call(snapshot, key) ? snapshot[key] : defaultActive(day.weekdayNum, slot.key);
+    }));
+    persistPlan(planDays);
+    renderPlan();
+  });
+
+  refreshLoadSelect();
+}
+
+// --- tema chiaro/scuro ---
+function systemPrefersDark() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function effectiveTheme() {
+  return localStorage.getItem(THEME_KEY) || (systemPrefersDark() ? 'dark' : 'light');
+}
+function applyTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored) {
+    document.documentElement.setAttribute('data-theme', stored);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  const knob = document.getElementById('theme-knob');
+  knob.style.transform = effectiveTheme() === 'dark' ? 'translateX(18px)' : 'translateX(0)';
+}
+function setupThemeSwitch() {
+  document.getElementById('theme-switch').addEventListener('click', () => {
+    localStorage.setItem(THEME_KEY, effectiveTheme() === 'dark' ? 'light' : 'dark');
+    applyTheme();
+  });
+  applyTheme();
+}
+
+// --- fuso orario e formato ora ---
+function getTz() { return localStorage.getItem(TZ_KEY) || 'local'; }
+function getHour12() { return localStorage.getItem(HOUR12_KEY) === '1'; }
+
+function formatDateTime(date) {
+  const opts = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: getHour12() };
+  const tz = getTz();
+  if (tz !== 'local') opts.timeZone = tz;
+  return date.toLocaleString(T.localeCode, opts);
+}
+function formatTime(date) {
+  const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: getHour12() };
+  const tz = getTz();
+  if (tz !== 'local') opts.timeZone = tz;
+  return date.toLocaleTimeString(T.localeCode, opts);
+}
+
+function updateTimeDisplays() {
+  if (!lastData || lastData.status !== 'ok') return;
+  const now = Date.now();
+
+  const weekResetDate = parseResetDate(lastData.reset_date);
+  const daysLeft = Math.max(0, Math.ceil((weekResetDate.getTime() - now) / 86400000));
+  document.getElementById('week-reset').textContent = formatDateTime(weekResetDate) +
+    ' (' + T.inPrefix + daysLeft + T.dayUnit + ')';
+
+  if (lastData.five_hour_reset_date) {
+    const sessionResetDate = parseResetDate(lastData.five_hour_reset_date);
+    const hoursLeft = Math.max(0, Math.ceil((sessionResetDate.getTime() - now) / 3600000));
+    document.getElementById('hour-reset').textContent = formatDateTime(sessionResetDate) +
+      ' (' + T.inPrefix + hoursLeft + T.hourUnit + ')';
+  } else {
+    document.getElementById('hour-reset').textContent = '--';
+  }
+
+  document.getElementById('updated').textContent = T.updatedPrefix + formatTime(new Date(lastData.updated_at * 1000));
+}
+
+function setupTzControls() {
+  const select = document.getElementById('tz-select');
+  select.innerHTML = TIMEZONES.map(tz =>
+    '<option value="' + tz + '">' + (tz === 'local' ? T.localTz : tz) + '</option>'
+  ).join('');
+  select.value = getTz();
+  select.addEventListener('change', () => {
+    localStorage.setItem(TZ_KEY, select.value);
+    updateTimeDisplays();
+  });
+
+  const formatBtn = document.getElementById('format-toggle');
+  const refreshFormatLabel = () => { formatBtn.textContent = getHour12() ? 'AM/PM' : '24h'; };
+  refreshFormatLabel();
+  formatBtn.addEventListener('click', () => {
+    localStorage.setItem(HOUR12_KEY, getHour12() ? '0' : '1');
+    refreshFormatLabel();
+    updateTimeDisplays();
+  });
+}
+
+function render(data) {
+  const updated = document.getElementById('updated');
+
+  if (!data || data.status !== 'ok') {
+    document.getElementById('week-pct').textContent = '--%';
+    document.getElementById('hour-pct').textContent = '--%';
+    updated.textContent = data && data.status === 'n/d' ? T.noApiResponse : T.waitingData;
+    return;
+  }
+  lastData = data;
+
+  document.getElementById('hour-pct').textContent = (data.five_hour_pct !== null && data.five_hour_pct !== undefined)
+    ? data.five_hour_pct.toFixed(0) + '%' : '--%';
+  document.getElementById('hour-bar-fill').style.width = (data.five_hour_pct || 0) + '%';
+  document.getElementById('week-pct').textContent = data.used_pct.toFixed(0) + '%';
+  document.getElementById('week-bar-fill').style.width = data.used_pct + '%';
+
+  const thresholdEl = document.getElementById('threshold');
+  const thresholdRow = document.getElementById('threshold-row');
+  const diff = data.used_pct - data.target_pct;
+  const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(0) + '%';
+  thresholdEl.textContent = diffStr + ' ' + (data.over_pace ? T.overLimit : T.underLimit);
+  thresholdRow.classList.toggle('over', !!data.over_pace);
+  thresholdRow.classList.toggle('under', !data.over_pace);
+
+  updateTimeDisplays();
+
+  if (!planDays && data.reset_date) {
+    const resetsAt = parseResetDate(data.reset_date);
+    const dates = computeSevenDays(resetsAt);
+    planDays = buildDayModel(dates, loadPlan());
+  }
+  renderPlan();
+}
+
+async function poll() {
+  try {
+    const res = await fetch('data/state.json?_=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) render(await res.json());
+  } catch (e) {
+    document.getElementById('updated').textContent = T.stateNotFound;
+  }
+}
+
+applyStrings();
+setupPlanToolbar();
+setupThemeSwitch();
+setupTzControls();
+poll();
+setInterval(poll, POLL_MS);
+setInterval(renderPlan, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
+</script>
+</body>
+</html>

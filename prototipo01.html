@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Claude usage monitor — prototipo tile agenda</title>
+<style>
+  body {
+    font-family: monospace;
+    background: #fff;
+    color: #000;
+    margin: 3rem auto;
+    max-width: 600px;
+    padding: 0 1rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #000; color: #fff; }
+  }
+  h1 { font-size: 0.9rem; font-weight: normal; opacity: 0.6; margin: 0 0 1.5rem 0; }
+
+  .hairline { border-top: 1px solid rgba(0,0,0,0.15); }
+  @media (prefers-color-scheme: dark) {
+    .hairline { border-top: 1px solid rgba(255,255,255,0.15); }
+  }
+
+  .stats { list-style: none; margin: 0 0 1.5rem 0; padding: 0; color: #666; }
+  @media (prefers-color-scheme: dark) {
+    .stats { color: #999; }
+  }
+  .stats li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+  }
+  .stats .stat-key, .stats .stat-val { font-size: 0.8rem; font-weight: normal; }
+
+  .stats li.over, .stats li.over .stat-key, .stats li.over .stat-val { color: #c81450; }
+  .stats li.under, .stats li.under .stat-key, .stats li.under .stat-val { color: #2e8b7b; }
+  @media (prefers-color-scheme: dark) {
+    .stats li.over, .stats li.over .stat-key, .stats li.over .stat-val { color: #ff4d78; }
+    .stats li.under, .stats li.under .stat-key, .stats li.under .stat-val { color: #4fd7c0; }
+  }
+
+  .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .reset-btn, .save-btn {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid #999;
+    color: inherit;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  .reset-btn:hover, .save-btn:hover { opacity: 1; }
+  .name-input, .load-select {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid #999;
+    color: inherit;
+    padding: 0.4rem 0.5rem;
+  }
+  .name-input { width: 9rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 1.5rem;
+  }
+  .daycol-head {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    padding-top: 4px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .daycol-head { color: #999; }
+  }
+  .daycol-head .dow { font-weight: normal; }
+  .daycol-head .date { font-size: 0.8rem; }
+
+  .tile {
+    height: 46px;
+    border: 1px solid rgba(0,0,0,0.15);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    line-height: 1.1;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    .tile { border-color: rgba(255,255,255,0.15); color: #999; }
+  }
+  .tile.active { background: rgba(0,0,0,0.08); }
+  @media (prefers-color-scheme: dark) {
+    .tile.active { background: rgba(255,255,255,0.12); }
+  }
+  .tile.inactive { background: transparent; }
+  .tile.current { border: 2px solid #000; }
+  @media (prefers-color-scheme: dark) {
+    .tile.current { border-color: #fff; }
+  }
+
+  .now-marker {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    width: 2px;
+    background: #c00;
+    transform: translateX(-1px);
+  }
+
+  .explanation { font-size: 0.8rem; opacity: 0.5; line-height: 1.5; margin-bottom: 1rem; }
+  .updated { opacity: 0.4; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+  <h1>claude usage monitor — prototipo tile agenda</h1>
+
+  <ul class="stats">
+    <li class="hairline"><span class="stat-key">slot quantità</span><span class="stat-val" id="slot-count">--</span></li>
+    <li class="hairline"><span class="stat-key">uso settimanale attuale</span><span class="stat-val" id="used-pct">--%</span></li>
+    <li class="hairline"><span class="stat-key">uso obiettivo slot</span><span class="stat-val" id="target-slot-pct">--%</span></li>
+    <li class="hairline"><span class="stat-key">uso obiettivo giornata</span><span class="stat-val" id="target-day-pct">--%</span></li>
+    <li class="hairline" id="threshold-row"><span class="stat-key">soglia attuale</span><span class="stat-val" id="threshold">--</span></li>
+  </ul>
+
+  <div class="toolbar">
+    <button class="reset-btn" id="reset-plan">reset piano</button>
+    <input class="name-input" id="plan-name" type="text" placeholder="nome piano">
+    <button class="save-btn" id="save-plan">salva piano con nome</button>
+    <select class="load-select" id="load-plan">
+      <option value="">carica piano salvato…</option>
+    </select>
+  </div>
+
+  <div class="grid hairline" id="grid" style="padding-top: 0.8rem;"></div>
+
+  <div class="explanation">
+    clicca uno slot per attivarlo o disattivarlo: il peso di ogni slot (vedi "slot quantità") si ricalcola in automatico in base a quanti sono attivi. i feriali (giovedì-venerdì-lunedì-martedì-mercoledì) partono con mattina e pomeriggio attivi; sabato e domenica partono vuoti. la barra rossa nella casella evidenziata indica il momento attuale. il piano corrente resta salvato nel browser (localStorage); puoi anche salvarne più versioni con un nome e richiamarle dal menu "carica piano salvato".
+  </div>
+
+  <div class="updated" id="updated"></div>
+
+<script>
+const POLL_MS = 5000;
+const DOW_ABBR = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const PLAN_KEY = 'claude-monitor-prototipo01-plan';
+const NAMED_PLANS_KEY = 'claude-monitor-prototipo01-named-plans';
+
+let usedPct = null;
+let days = null; // built once resets_at is known
+
+function parseResetDate(str) {
+  // formato "dd/mm/yyyy HH:MM"
+  const [datePart, timePart] = str.split(' ');
+  const [dd, mm, yyyy] = datePart.split('/').map(Number);
+  const [HH, MI] = timePart.split(':').map(Number);
+  return new Date(yyyy, mm - 1, dd, HH, MI, 0);
+}
+
+function dateOnly(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function computeSevenDays(resetsAt) {
+  const windowStart = new Date(resetsAt.getTime() - 7 * 86400 * 1000);
+  let startDate;
+  if (windowStart.getHours() < 11) {
+    startDate = dateOnly(windowStart);
+  } else {
+    startDate = new Date(dateOnly(windowStart).getTime() + 86400 * 1000);
+  }
+  const result = [];
+  for (let offset = 0; offset < 7; offset++) {
+    result.push(new Date(startDate.getTime() + offset * 86400 * 1000));
+  }
+  return result;
+}
+
+function loadPlan() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAN_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePlan(plan) {
+  localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+}
+
+function loadNamedPlans() {
+  try {
+    return JSON.parse(localStorage.getItem(NAMED_PLANS_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveNamedPlans(named) {
+  localStorage.setItem(NAMED_PLANS_KEY, JSON.stringify(named));
+}
+
+function defaultActive(dow, key) {
+  if (dow === 'Sab' || dow === 'Dom') return false;
+  return key === 'mattina' || key === 'pomeriggio';
+}
+
+function buildDayModel(dates, plan) {
+  return dates.map(d => {
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const dow = DOW_ABBR[d.getDay()];
+    const keys = isWeekend ? ['s1', 's2', 's3'] : ['mattina', 'pomeriggio', 'sera'];
+    const labels = isWeekend ? ['Slot 1', 'Slot 2', 'Slot 3'] : ['Mattina', 'Pomeriggio', 'Sera'];
+    const slots = keys.map((key, i) => {
+      const planKey = dow + ':' + key;
+      const active = Object.prototype.hasOwnProperty.call(plan, planKey) ? plan[planKey] : defaultActive(dow, key);
+      return { key, label: labels[i], active };
+    });
+    return { date: d, dow, isWeekend, slots };
+  });
+}
+
+function persistPlan(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.dow + ':' + slot.key] = slot.active; });
+  });
+  savePlan(plan);
+}
+
+function planSnapshot(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.dow + ':' + slot.key] = slot.active; });
+  });
+  return plan;
+}
+
+function slotBounds(isWeekend, key) {
+  if (isWeekend) {
+    return { s1: { start: 0, end: 8 }, s2: { start: 8, end: 16 }, s3: { start: 16, end: 24 } }[key];
+  }
+  return { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } }[key];
+}
+
+function flatten(days) {
+  const tiles = [];
+  days.forEach((day, dayIdx) => {
+    day.slots.forEach((slot, slotIdx) => tiles.push({ day, dayIdx, slot, slotIdx }));
+  });
+  return tiles;
+}
+
+function computeTargets(days, now) {
+  const all = flatten(days);
+  const total = all.filter(t => t.slot.active).length;
+  const weight = total > 0 ? 100 / total : 0;
+  const today = dateOnly(now);
+  const nowHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+
+  // obiettivo giorno: scatta per intero appena inizia il giorno (come nella versione live)
+  // obiettivo slot: scatta per intero appena inizia lo slot, più granulare
+  let targetDay = 0;
+  let targetSlot = 0;
+  let currentTile = null;
+
+  for (const t of all) {
+    const tDate = dateOnly(t.day.date);
+    if (tDate.getTime() < today.getTime()) {
+      if (t.slot.active) { targetDay += weight; targetSlot += weight; }
+    } else if (tDate.getTime() === today.getTime()) {
+      if (t.slot.active) targetDay += weight;
+      const b = slotBounds(t.day.isWeekend, t.slot.key);
+      if (nowHour >= b.start) {
+        if (t.slot.active) targetSlot += weight;
+      }
+      if (nowHour >= b.start && nowHour < b.end) {
+        const fraction = (nowHour - b.start) / (b.end - b.start);
+        currentTile = { dayIdx: t.dayIdx, slotKey: t.slot.key, fraction };
+      }
+    }
+  }
+  return { total, weight, targetDay, targetSlot, currentTile };
+}
+
+function render() {
+  if (!days) return;
+  const now = new Date();
+  const { total, weight, targetDay, targetSlot, currentTile } = computeTargets(days, now);
+
+  document.getElementById('slot-count').textContent = total + ' (' + weight.toFixed(1) + '% l\'uno)';
+  document.getElementById('used-pct').textContent = usedPct !== null ? usedPct.toFixed(0) + '%' : '--%';
+  document.getElementById('target-slot-pct').textContent = targetSlot.toFixed(0) + '%';
+  document.getElementById('target-day-pct').textContent = targetDay.toFixed(0) + '%';
+
+  const thresholdEl = document.getElementById('threshold');
+  const thresholdRow = document.getElementById('threshold-row');
+  if (usedPct !== null) {
+    const diff = usedPct - targetSlot;
+    const over = diff > 0;
+    const diffStr = (over ? '+' : '') + diff.toFixed(0) + '%';
+    thresholdEl.textContent = diffStr + ' ' + (over ? 'sopra limite' : 'sotto limite');
+    thresholdRow.classList.toggle('over', over);
+    thresholdRow.classList.toggle('under', !over);
+  } else {
+    thresholdEl.textContent = '--';
+    thresholdRow.classList.remove('over', 'under');
+  }
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  // header row
+  days.forEach(day => {
+    const head = document.createElement('div');
+    head.className = 'daycol-head';
+    head.innerHTML = '<div class="dow">' + day.dow + '</div><div class="date">' +
+      String(day.date.getDate()).padStart(2, '0') + '/' + String(day.date.getMonth() + 1).padStart(2, '0') + '</div>';
+    grid.appendChild(head);
+  });
+
+  // 3 slot rows
+  for (let row = 0; row < 3; row++) {
+    days.forEach((day, dayIdx) => {
+      const slot = day.slots[row];
+      const cell = document.createElement('div');
+      cell.className = 'tile ' + (slot.active ? 'active' : 'inactive');
+      cell.textContent = slot.label;
+      cell.title = slot.active ? 'clicca per disattivare' : 'clicca per attivare';
+
+      cell.addEventListener('click', () => {
+        slot.active = !slot.active;
+        persistPlan(days);
+        render();
+      });
+
+      const isCurrent = currentTile && currentTile.dayIdx === dayIdx && currentTile.slotKey === slot.key;
+      if (isCurrent) {
+        cell.classList.add('current');
+        const marker = document.createElement('div');
+        marker.className = 'now-marker';
+        marker.style.left = (currentTile.fraction * 100) + '%';
+        cell.appendChild(marker);
+      }
+
+      grid.appendChild(cell);
+    });
+  }
+
+  document.getElementById('updated').textContent = 'aggiornato ' + now.toLocaleTimeString('it-IT', { hour12: false });
+}
+
+function refreshLoadSelect() {
+  const select = document.getElementById('load-plan');
+  const named = loadNamedPlans();
+  const names = Object.keys(named).sort();
+  select.innerHTML = '<option value="">carica piano salvato…</option>' +
+    names.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+}
+
+function setupToolbar() {
+  document.getElementById('reset-plan').addEventListener('click', () => {
+    localStorage.removeItem(PLAN_KEY);
+    if (days) {
+      days.forEach(day => day.slots.forEach(slot => { slot.active = defaultActive(day.dow, slot.key); }));
+      persistPlan(days);
+    }
+    render();
+  });
+
+  document.getElementById('save-plan').addEventListener('click', () => {
+    const input = document.getElementById('plan-name');
+    const name = input.value.trim();
+    if (!name || !days) return;
+    const named = loadNamedPlans();
+    named[name] = planSnapshot(days);
+    saveNamedPlans(named);
+    refreshLoadSelect();
+    document.getElementById('load-plan').value = name;
+    input.value = '';
+  });
+
+  document.getElementById('load-plan').addEventListener('change', e => {
+    const name = e.target.value;
+    if (!name || !days) return;
+    const named = loadNamedPlans();
+    const snapshot = named[name];
+    if (!snapshot) return;
+    days.forEach(day => day.slots.forEach(slot => {
+      const key = day.dow + ':' + slot.key;
+      slot.active = Object.prototype.hasOwnProperty.call(snapshot, key) ? snapshot[key] : defaultActive(day.dow, slot.key);
+    }));
+    persistPlan(days);
+    render();
+  });
+
+  refreshLoadSelect();
+}
+
+async function poll() {
+  try {
+    const res = await fetch('data/state.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.status !== 'ok') return;
+    usedPct = data.used_pct;
+    if (!days && data.reset_date) {
+      const resetsAt = parseResetDate(data.reset_date);
+      const dates = computeSevenDays(resetsAt);
+      days = buildDayModel(dates, loadPlan());
+    }
+    render();
+  } catch (e) {
+    document.getElementById('updated').textContent = 'data/state.json non trovato';
+  }
+}
+
+setupToolbar();
+poll();
+setInterval(poll, POLL_MS);
+setInterval(render, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
+</script>
+</body>
+</html>
