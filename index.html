@@ -15,6 +15,8 @@
   :root[data-theme="dark"] { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
   :root[data-theme="light"] { --bg: #fff; --fg: #000; --muted: #666; --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08); --over: #c81450; --under: #2e8b7b; }
 
+  *, *::before, *::after { box-sizing: border-box; }
+
   body {
     font-family: monospace;
     background: var(--bg);
@@ -39,8 +41,8 @@
   .stats li.stat-with-bar { display: block; padding: 6px 0; }
   .stats li.stat-with-bar .stat-row { display: flex; justify-content: space-between; align-items: baseline; }
 
-  .bar-track { margin-top: 6px; height: 8px; border: 1px solid var(--fg); box-sizing: border-box; }
-  .bar-fill { height: 100%; background: var(--fg); }
+  .bar-track { margin-top: 6px; height: 8px; border: 1px solid var(--fg); border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--fg); border-radius: 999px; }
   .sub-line { font-size: 0.8rem; opacity: 0.7; margin-top: 4px; }
 
   .stats li.over, .stats li.over .stat-key, .stats li.over .stat-val { color: var(--over); }
@@ -49,39 +51,86 @@
   .section-title { font-size: 0.8rem; color: var(--muted); padding: 0.8rem 0 0.6rem 0; }
 
   /* pianificazione */
-  .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
-  .reset-btn, .save-btn, .format-btn {
+  .toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: nowrap; }
+  .reset-btn {
     font-family: monospace;
     font-size: 0.8rem;
     background: none;
     border: 1px solid var(--border);
+    border-radius: 999px;
     color: inherit;
-    padding: 0.4rem 0.6rem;
+    padding: 0.3rem 0.7rem;
     cursor: pointer;
     opacity: 0.7;
+    white-space: nowrap;
   }
-  .reset-btn:hover, .save-btn:hover, .format-btn:hover { opacity: 1; }
-  .name-input, .load-select, .tz-select {
+  .reset-btn:hover { opacity: 1; }
+  .load-select {
     font-family: monospace;
     font-size: 0.8rem;
     background: none;
     border: 1px solid var(--border);
+    border-radius: 999px;
     color: inherit;
-    padding: 0.4rem 0.5rem;
+    padding: 0.4rem 0.8rem;
+    flex: 1;
+    min-width: 0;
   }
-  .name-input { width: 9rem; }
+  .name-save-combo {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding-left: 0.8rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .name-input {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0.4rem 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .name-input:focus { outline: none; }
+  .save-btn {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: inherit;
+    padding: 0.3rem 0.7rem;
+    margin: 2px;
+    cursor: pointer;
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+  .save-btn:hover { opacity: 1; }
 
   .grid {
     display: grid;
-    grid-template-columns: 28px repeat(7, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 4px;
     margin-bottom: 1.5rem;
+    position: relative;
   }
-  .daycol-head { font-size: 0.8rem; color: var(--muted); text-align: center; padding-top: 4px; }
+  .daycol-head { height: 34px; box-sizing: border-box; font-size: 0.8rem; color: var(--muted); text-align: center; padding-top: 4px; }
   .daycol-head .date { font-size: 0.8rem; }
   .daycol-head .today-target { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
 
+  /* le icone dei confini di giornata sporgono a sinistra della griglia, fuori dalle
+     colonne dei giorni: così le colonne restano allineate alla legenda e agli altri
+     blocchi, che iniziano tutti allo stesso bordo sinistro. */
   .axis-cell {
+    position: absolute;
+    left: -26px;
+    top: 38px;
+    height: 146px;
+    width: 18px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -109,36 +158,46 @@
   .tile.active { background: var(--tile-fill); }
   .tile.inactive { background: transparent; opacity: 0.5; }
   .tile.current { border: 2px solid var(--fg); }
+  .tile.current.over { border-color: var(--over); }
+  .tile.current.under { border-color: var(--under); }
   .tile.worked::after {
     content: '';
     position: absolute;
-    left: 0; right: 0; bottom: 0;
-    height: 3px;
+    left: 3px; right: 3px; bottom: 3px;
+    height: 2px;
     background: var(--fg);
   }
 
-  .legend { display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .legend { display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-swatch { position: relative; display: inline-block; width: 16px; height: 16px; border: 1px solid var(--border); box-sizing: border-box; }
+  .legend-swatch { position: relative; display: inline-block; width: 16px; height: 16px; border: 1px solid var(--border); }
   .legend-swatch.fill { background: var(--tile-fill); }
-  .legend-swatch.track::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--fg); }
+  .legend-swatch.track::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 2px; background: var(--fg); }
+  .legend-swatch.pace-under::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 2px; background: var(--under); }
+  .legend-swatch.pace-over::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 3px; height: 2px; background: var(--over); }
 
   .now-marker {
     position: absolute;
     top: -1px;
     bottom: -1px;
     width: 2px;
-    background: #c00;
+    background: var(--under);
     transform: translateX(-1px);
   }
+  .now-marker.over { background: var(--over); }
 
   .explanation { font-size: 0.8rem; opacity: 0.5; line-height: 1.5; margin-bottom: 1.5rem; }
+  .explanation p { margin: 0 0 0.6rem 0; }
+  .explanation p:last-child { margin-bottom: 0; }
+  .explanation a { color: inherit; }
+  .inline-icon { display: inline-flex; vertical-align: -3px; }
+  .inline-icon svg { width: 13px; height: 13px; display: block; }
 
   .updated { opacity: 0.4; font-size: 0.8rem; margin-top: 1rem; }
 
-  .footer-controls { display: flex; align-items: center; gap: 0.6rem; margin: 1.5rem 0 0.6rem 0; flex-wrap: wrap; }
+  .footer-controls { display: flex; align-items: center; gap: 20px; margin: 1.5rem 0 0.6rem 0; padding-top: 10px; flex-wrap: wrap; }
   .theme-switch {
-    width: 40px; height: 22px;
+    width: 50px; height: 28px;
     border: 1px solid var(--border);
     border-radius: 999px;
     position: relative;
@@ -151,18 +210,119 @@
     position: absolute; top: 50%; transform: translateY(-50%);
     width: 12px; height: 12px;
   }
-  .theme-switch .icon-sun { left: 4px; }
-  .theme-switch .icon-moon { right: 4px; }
+  .theme-switch .icon-sun { left: 6px; }
+  .theme-switch .icon-moon { right: 6px; }
   .theme-switch .knob {
-    position: absolute; top: 2px; left: 2px;
-    width: 16px; height: 16px;
+    position: absolute; top: 4px; left: 4px;
+    width: 18px; height: 18px;
     border-radius: 50%;
     background: var(--fg);
     transition: transform 0.2s ease;
   }
 
+  .tz-select {
+    font-family: monospace;
+    font-size: 0.8rem;
+    height: 28px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: inherit;
+    padding: 0 0.7rem;
+  }
+
+  .format-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: monospace;
+    font-size: 0.65rem;
+    padding: 0;
+  }
+  .format-switch .fmt-label { opacity: 0.5; }
+  .format-switch .fmt-label.active { opacity: 1; color: var(--fg); }
+  .format-switch .track {
+    width: 50px; height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    position: relative;
+  }
+  .format-switch .track .knob {
+    position: absolute; top: 4px; left: 4px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--fg);
+    transition: transform 0.2s ease;
+  }
+
+  /* pill con due lingue cliccabili separate da un punto, come in orco.it */
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: none;
+    color: var(--muted);
+    font-family: monospace;
+    font-size: 0.65rem;
+    padding: 0 0.6rem;
+  }
+  .lang-switch svg { width: 12px; height: 12px; }
+  .lang-switch .lang-opt {
+    font-family: monospace;
+    font-size: 0.65rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--muted);
+  }
+  .lang-switch .lang-opt.active { color: var(--fg); text-decoration: underline; }
+  .lang-switch .lang-dot { font-size: 0.5rem; opacity: 0.6; }
+
   .footer { font-size: 0.8rem; opacity: 0.4; padding-top: 0.8rem; }
   .footer a { color: inherit; }
+  .footer .footer-line { text-align: left; }
+
+  .consent-banner {
+    position: fixed;
+    left: 1rem; right: 1rem; bottom: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .consent-banner[hidden] { display: none; }
+  .consent-banner a { color: var(--fg); }
+  .consent-banner .consent-ok {
+    font-family: monospace;
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--fg);
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-left: auto;
+  }
 </style>
 </head>
 <body>
@@ -185,20 +345,25 @@
     <li class="hairline"><span class="stat-key" id="lbl-plan-target-day">soglia di fine giornata</span><span class="stat-val" id="plan-target-day">--%</span></li>
   </ul>
 
-  <div class="toolbar">
-    <button class="reset-btn" id="reset-plan">reset piano</button>
-    <input class="name-input" id="plan-name" type="text" placeholder="nome piano">
-    <button class="save-btn" id="save-plan">salva piano con nome</button>
-    <select class="load-select" id="load-plan">
-      <option value="" id="load-plan-default">carica piano salvato…</option>
-    </select>
-  </div>
-
+  <div class="hairline grid-hairline"></div>
   <div class="grid" id="grid"></div>
 
   <div class="legend">
     <span class="legend-item"><span class="legend-swatch fill"></span><span id="lbl-legend-plan">pianificazione</span></span>
     <span class="legend-item"><span class="legend-swatch track"></span><span id="lbl-legend-log">log data</span></span>
+    <span class="legend-item"><span class="legend-swatch pace-under"></span><span id="lbl-legend-under">sotto soglia</span></span>
+    <span class="legend-item"><span class="legend-swatch pace-over"></span><span id="lbl-legend-over">sopra soglia</span></span>
+  </div>
+
+  <div class="toolbar">
+    <select class="load-select" id="load-plan">
+      <option value="" id="load-plan-default">apri…</option>
+    </select>
+    <div class="name-save-combo">
+      <input class="name-input" id="plan-name" type="text" placeholder="nome del piano">
+      <button class="save-btn" id="save-plan">salva</button>
+    </div>
+    <button class="reset-btn" id="reset-plan">reset piano</button>
   </div>
 
   <div class="explanation" id="explanation"></div>
@@ -212,13 +377,37 @@
       <span class="knob" id="theme-knob"></span>
     </button>
     <select class="tz-select" id="tz-select"></select>
-    <button class="format-btn" id="format-toggle">24h</button>
+    <button class="format-switch" id="format-toggle" aria-label="24h / AM-PM">
+      <span class="fmt-label" id="fmt-label-24h">24h</span>
+      <span class="track"><span class="knob" id="format-knob"></span></span>
+      <span class="fmt-label" id="fmt-label-ampm">AM/PM</span>
+    </button>
+    <span class="lang-switch" aria-label="IT / EN">
+      <span id="icon-globe"></span>
+      <button class="lang-opt" id="lang-opt-it">IT</button>
+      <span class="lang-dot">•</span>
+      <button class="lang-opt" id="lang-opt-en">EN</button>
+    </span>
   </div>
 
-  <div class="footer">MIT License · © 2026 Francesco Zaccaria · <a href="LICENSE" target="_blank" rel="noopener">LICENSE</a><br>icone: thanks to <a href="https://iconoir.com/" target="_blank" rel="noopener">iconoir.com</a> &amp; <a href="https://lucide.dev/" target="_blank" rel="noopener">lucide.dev</a></div>
+  <div class="footer">
+    <div class="footer-line" id="lbl-icons-credit"></div>
+    <div class="footer-line"><a href="privacy.html" id="lbl-privacy-link2">privacy</a> · <a href="cookies.html" id="lbl-storage-link2">local storage</a></div>
+    <div class="footer-line" id="lbl-made-with"></div>
+    <div class="footer-line">© 2026 Francesco Zaccaria · <a href="LICENSE" target="_blank" rel="noopener">MIT License</a></div>
+  </div>
+
+  <div class="consent-banner" id="consent-banner" hidden>
+    <span id="consent-text"></span>
+    <button class="consent-ok" id="consent-ok">OK</button>
+  </div>
 
 <script>
-const LOCALE = (navigator.language || 'en').toLowerCase().startsWith('it') ? 'it' : 'en';
+const LANG_KEY = 'claude-monitor-lang';
+function detectLocale() {
+  return (navigator.language || 'en').toLowerCase().startsWith('it') ? 'it' : 'en';
+}
+let LOCALE = localStorage.getItem(LANG_KEY) || detectLocale();
 
 const ICONS = {
   coffee: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 11.6V15C17 18.3137 14.3137 21 11 21H9C5.68629 21 3 18.3137 3 15V11.6C3 11.2686 3.26863 11 3.6 11H16.4C16.7314 11 17 11.2686 17 11.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 9C12 8 12.7143 7 14.1429 7V7C15.7208 7 17 5.72081 17 4.14286V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 9V8.5C8 6.84315 9.34315 5.5 11 5.5V5.5C12.1046 5.5 13 4.60457 13 3.5V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 11H18.5C19.8807 11 21 12.1193 21 13.5C21 14.8807 19.8807 16 18.5 16H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
@@ -227,12 +416,25 @@ const ICONS = {
   bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 12L23 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 2V1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 23V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 20L19 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 4L19 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 20L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1 12L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5066C3 16.7497 7.25034 21 12.4934 21C16.2209 21 19.4466 18.8518 21 15.7259C12.4934 15.7259 8.27411 11.5066 8.27411 3C5.14821 4.55344 3 7.77915 3 11.5066Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
 };
+
+// =========================================================================
+// PERSONALIZZAZIONE: fasce della giornata (righe del calendario) e icone che
+// ne segnano i confini. Per aggiungere/togliere fasce, modifica insieme le
+// tre costanti sotto, mantenendo BOUNDARY_ICON_KEYS lungo SLOT_KEYS.length+1
+// (una icona prima della prima fascia, una dopo ciascuna fascia successiva).
+// Le icone disponibili sono quelle elencate in ICONS qui sopra.
+// =========================================================================
+const SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
+const SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
+const BOUNDARY_ICON_KEYS = ['coffee', 'apple', 'pizza', 'bed'];
+// =========================================================================
 
 const STRINGS = {
   it: {
     title: 'claude usage monitor',
-    tagline: 'Monitora in tempo reale l\'uso di Claude (sessione e settimana) e pianifica i tuoi slot di lavoro.',
+    tagline: 'monitora in tempo reale l\'uso di Claude (sessione e settimana) e pianifica i tuoi slot di lavoro.',
     session: 'uso sessione',
     week: 'uso settimana',
     targetDay: 'obiettivo giorno',
@@ -243,20 +445,34 @@ const STRINGS = {
     underLimit: 'sotto limite',
     planTargetSlot: 'soglia di fine slot',
     planTargetDay: 'soglia di fine giornata',
-    resetPlan: 'reset piano',
-    planNamePlaceholder: 'nome piano',
-    savePlan: 'salva piano con nome',
-    loadPlanDefault: 'carica piano salvato…',
-    explanation: 'clicca uno slot per attivarlo o disattivarlo: i numeri progressivi indicano l\'ordine degli slot attivi nella settimana, "–" indica uno slot non selezionato. la scala a sinistra segna i confini della giornata: caffè (sveglia), mela (pranzo), pizza (cena), letto (a nanna). il piano resta salvato nel browser; puoi salvarne più versioni con un nome.',
+    resetPlan: 'reset',
+    planNamePlaceholder: 'nome del piano',
+    savePlan: 'salva',
+    loadPlanDefault: 'apri…',
+    legendUnder: 'sotto soglia',
+    legendOver: 'sopra soglia',
+    consentText: 'Questo sito non usa cookie: salva solo alcune preferenze nel tuo browser (localStorage), che restano sul tuo dispositivo. Dettagli nella <a href="privacy.html">privacy</a> e nella nota sui <a href="cookies.html">salvataggi locali</a>.',
+    privacyLink: 'privacy',
+    storageLink: 'salvataggi locali',
+    explanation: 'clicca uno slot per attivarlo o disattivarlo: i numeri progressivi indicano l\'ordine degli slot attivi nella settimana, "–" indica uno slot non selezionato.',
+    boundaryIntro: 'la scala segna i confini degli slot:',
+    boundaryLabels: ['sveglia', 'pranzo', 'cena', 'a nanna'],
+    planSaved: 'il piano resta salvato nel browser',
+    planSavedDetails: 'qui dettagli',
+    planSavedRest: '; puoi salvarne più versioni con un nome.',
+    iconsCreditPrefix: 'icone: grazie a ',
+    madeWithPrefix: 'fatto con ♥ da ',
+    madeWithSuffix: ' in collaborazione con Claude Sonnet 5.',
     updatedPrefix: 'aggiornato ',
     noApiResponse: 'nessuna risposta API in questa sessione',
     waitingData: 'in attesa di dati',
     stateNotFound: 'data/state.json non trovato',
     activate: 'clicca per attivare',
     deactivate: 'clicca per disattivare',
-    dow: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
+    maxPlansReached: 'massimo 10 piani salvati: elimina una versione prima di salvarne una nuova.',
+    dow: ['dom','lun','mar','mer','gio','ven','sab'],
     localeCode: 'it-IT',
-    localTz: 'locale',
+    localTz: 'fusorario',
     legendPlan: 'pianificazione',
     legendLog: 'log data',
     inPrefix: 'tra ',
@@ -265,7 +481,7 @@ const STRINGS = {
   },
   en: {
     title: 'claude usage monitor',
-    tagline: 'Monitor your Claude usage in real time (session and week) and plan your weekly work slots.',
+    tagline: 'monitor your Claude usage in real time (session and week) and plan your weekly work slots.',
     session: 'session usage',
     week: 'week usage',
     targetDay: 'day target',
@@ -276,18 +492,32 @@ const STRINGS = {
     underLimit: 'under limit',
     planTargetSlot: 'end-of-slot threshold',
     planTargetDay: 'end-of-day threshold',
-    resetPlan: 'reset plan',
+    resetPlan: 'reset',
     planNamePlaceholder: 'plan name',
-    savePlan: 'save plan as',
-    loadPlanDefault: 'load saved plan…',
-    explanation: 'click a slot to toggle it: the numbers show the order of active slots through the week, "–" means the slot isn\'t selected. the axis on the left marks the boundaries of the day: coffee (wake up), apple (lunch), pizza (dinner), bed (sleep). the plan is saved in your browser; you can save several named versions.',
+    savePlan: 'save',
+    loadPlanDefault: 'open…',
+    legendUnder: 'under threshold',
+    legendOver: 'over threshold',
+    consentText: 'This site uses no cookies: it only saves a few preferences in your browser (localStorage), which stay on your device. Details in the <a href="privacy.html">privacy</a> notice and the <a href="cookies.html">local saves</a> note.',
+    privacyLink: 'privacy',
+    storageLink: 'local saves',
+    explanation: 'click a slot to toggle it: the numbers show the order of active slots through the week, "–" means the slot isn\'t selected.',
+    boundaryIntro: 'the axis marks the boundaries of the slots:',
+    boundaryLabels: ['wake up', 'lunch', 'dinner', 'sleep'],
+    planSaved: 'the plan is saved in your browser',
+    planSavedDetails: 'details here',
+    planSavedRest: '; you can save several named versions.',
+    iconsCreditPrefix: 'icons: thanks to ',
+    madeWithPrefix: 'made with ♥ by ',
+    madeWithSuffix: ' in collaboration with Claude Sonnet 5.',
     updatedPrefix: 'updated ',
     noApiResponse: 'no API response in this session',
     waitingData: 'waiting for data',
     stateNotFound: 'data/state.json not found',
     activate: 'click to activate',
     deactivate: 'click to deactivate',
-    dow: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    maxPlansReached: 'maximum 10 saved plans: delete a version before saving a new one.',
+    dow: ['sun','mon','tue','wed','thu','fri','sat'],
     localeCode: 'en-GB',
     localTz: 'local',
     legendPlan: 'plan',
@@ -297,19 +527,28 @@ const STRINGS = {
     dayUnit: 'd',
   },
 };
-const T = STRINGS[LOCALE];
+let T = STRINGS[LOCALE];
 
 const POLL_MS = 5000;
 const PLAN_KEY = 'claude-monitor-plan';
 const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
+const MAX_SAVED_PLANS = 10;
 const THEME_KEY = 'claude-monitor-theme';
 const TZ_KEY = 'claude-monitor-tz';
 const HOUR12_KEY = 'claude-monitor-hour12';
-const SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
 const TIMEZONES = ['local', 'UTC', 'Europe/Rome', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'Asia/Shanghai'];
 
 let planDays = null; // costruito una volta noto resets_at
 let lastData = null; // ultimo state.json valido, per riformattare gli orari senza ripollare
+
+function buildExplanationHTML() {
+  const boundaryLine = BOUNDARY_ICON_KEYS.map((iconKey, i) =>
+    (T.boundaryLabels[i] || '') + ' <span class="inline-icon">' + ICONS[iconKey] + '</span>'
+  ).join(' · ');
+  return '<p>' + T.explanation + '</p>' +
+    '<p>' + T.boundaryIntro + ' ' + boundaryLine + '</p>' +
+    '<p>' + T.planSaved + ' (<a href="cookies.html">' + T.planSavedDetails + '</a>)' + T.planSavedRest + '</p>';
+}
 
 function applyStrings() {
   document.documentElement.lang = LOCALE;
@@ -325,13 +564,23 @@ function applyStrings() {
   document.getElementById('lbl-plan-target-day').textContent = T.planTargetDay;
   document.getElementById('lbl-legend-plan').textContent = T.legendPlan;
   document.getElementById('lbl-legend-log').textContent = T.legendLog;
+  document.getElementById('lbl-legend-under').textContent = T.legendUnder;
+  document.getElementById('lbl-legend-over').textContent = T.legendOver;
   document.getElementById('reset-plan').textContent = T.resetPlan;
   document.getElementById('plan-name').placeholder = T.planNamePlaceholder;
   document.getElementById('save-plan').textContent = T.savePlan;
-  document.getElementById('load-plan-default').textContent = T.loadPlanDefault;
-  document.getElementById('explanation').textContent = T.explanation;
+  document.getElementById('explanation').innerHTML = buildExplanationHTML();
   document.getElementById('icon-sun').innerHTML = ICONS.sun;
   document.getElementById('icon-moon').innerHTML = ICONS.moon;
+  document.getElementById('icon-globe').innerHTML = ICONS.globe;
+  document.getElementById('lbl-privacy-link2').textContent = T.privacyLink;
+  document.getElementById('lbl-storage-link2').textContent = T.storageLink;
+  document.getElementById('lbl-icons-credit').innerHTML = T.iconsCreditPrefix +
+    '<a href="https://iconoir.com/" target="_blank" rel="noopener">iconoir.com</a> &amp; ' +
+    '<a href="https://lucide.dev/" target="_blank" rel="noopener">lucide.dev</a>';
+  document.getElementById('lbl-made-with').innerHTML = T.madeWithPrefix +
+    '<a href="https://short.masterismi.com/sitoistituzionale" target="_blank" rel="noopener">masterismi.com</a>' +
+    T.madeWithSuffix;
 }
 
 function parseResetDate(str) {
@@ -393,7 +642,7 @@ function saveNamedPlans(named) {
 // l'abbreviazione localizzata, così il piano salvato non dipende dalla lingua.
 function defaultActive(weekdayNum, key) {
   if (weekdayNum === 0 || weekdayNum === 6) return false; // domenica, sabato
-  return key === 'mattina' || key === 'pomeriggio';
+  return SLOT_KEYS.indexOf(key) < 2; // le prime due fasce del giorno sono attive di default
 }
 
 function buildDayModel(dates, plan) {
@@ -423,8 +672,6 @@ function planSnapshot(days) {
   });
   return plan;
 }
-
-const SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
 
 function flatten(days) {
   const tiles = [];
@@ -478,20 +725,33 @@ function renderPlan() {
   document.getElementById('plan-target-slot').textContent = targetSlot.toFixed(0) + '%';
   document.getElementById('plan-target-day').textContent = targetDay.toFixed(0) + '%';
 
+  // "soglia attuale" dipende dal piano: confronta l'uso reale con la soglia di fine slot
+  // (non con la quota fissa del backend), così cambia in base a quanti slot hai pianificato.
+  const usedPct = (lastData && lastData.status === 'ok') ? lastData.used_pct : null;
+  const overPace = usedPct !== null ? usedPct > targetSlot : null;
+  const thresholdEl = document.getElementById('threshold');
+  const thresholdRow = document.getElementById('threshold-row');
+  if (usedPct !== null) {
+    const diff = usedPct - targetSlot;
+    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(0) + '%';
+    thresholdEl.textContent = diffStr + ' ' + (overPace ? T.overLimit : T.underLimit);
+    thresholdRow.classList.toggle('over', overPace);
+    thresholdRow.classList.toggle('under', !overPace);
+  } else {
+    thresholdEl.textContent = '--';
+    thresholdRow.classList.remove('over', 'under');
+  }
+
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
 
-  // riga di intestazione: cella vuota per l'asse + 7 giorni
-  const spacer = document.createElement('div');
-  spacer.style.gridColumn = '1';
-  spacer.style.gridRow = '1';
-  grid.appendChild(spacer);
-
+  // riga di intestazione: 7 giorni (le colonne ora sono allineate a legenda e resto
+  // del layout: l'asse delle icone non occupa più una colonna, sporge a sinistra)
   const today = dateOnly(now);
   planDays.forEach((day, dayIdx) => {
     const head = document.createElement('div');
     head.className = 'daycol-head';
-    head.style.gridColumn = String(dayIdx + 2);
+    head.style.gridColumn = String(dayIdx + 1);
     head.style.gridRow = '1';
     const isToday = dateOnly(day.date).getTime() === today.getTime();
     const todayTarget = (isToday && lastData && lastData.status === 'ok')
@@ -501,24 +761,23 @@ function renderPlan() {
     grid.appendChild(head);
   });
 
-  // asse verticale: un'unica cella che copre le 3 righe di slot, con le icone
-  // posizionate ai *confini* tra gli slot (inizio, tra 1-2, tra 2-3, fine) e non
-  // centrate sugli slot stessi.
+  // asse verticale: posizionato in assoluto fuori dalla griglia (vedi CSS .axis-cell),
+  // con le icone ai *confini* tra gli slot (inizio, tra 1-2, tra 2-3, fine) e non
+  // centrate sugli slot stessi. Altezza calcolata sul numero di fasce (SLOT_KEYS).
   const axis = document.createElement('div');
   axis.className = 'axis-cell';
-  axis.style.gridColumn = '1';
-  axis.style.gridRow = '2 / span 3';
-  axis.innerHTML = ICONS.coffee + ICONS.apple + ICONS.pizza + ICONS.bed;
+  axis.style.height = (SLOT_KEYS.length * 46 + (SLOT_KEYS.length - 1) * 4) + 'px';
+  axis.innerHTML = BOUNDARY_ICON_KEYS.map(k => ICONS[k]).join('');
   grid.appendChild(axis);
 
-  for (let row = 0; row < 3; row++) {
+  for (let row = 0; row < SLOT_KEYS.length; row++) {
     planDays.forEach((day, dayIdx) => {
       const slot = day.slots[row];
       const cell = document.createElement('div');
       const workedKey = isoDateLocal(day.date) + ':' + slot.key;
       const worked = !!(lastData && lastData.worked_slots && lastData.worked_slots[workedKey]);
       cell.className = 'tile ' + (slot.active ? 'active' : 'inactive') + (worked ? ' worked' : '');
-      cell.style.gridColumn = String(dayIdx + 2);
+      cell.style.gridColumn = String(dayIdx + 1);
       cell.style.gridRow = String(row + 2);
       const num = numbering.get(dayIdx + ':' + slot.key);
       cell.textContent = slot.active ? String(num) : '–';
@@ -532,9 +791,9 @@ function renderPlan() {
 
       const isCurrent = currentTile && currentTile.dayIdx === dayIdx && currentTile.slotKey === slot.key;
       if (isCurrent) {
-        cell.classList.add('current');
+        cell.classList.add('current', overPace ? 'over' : 'under');
         const marker = document.createElement('div');
-        marker.className = 'now-marker';
+        marker.className = 'now-marker' + (overPace ? ' over' : '');
         marker.style.left = (currentTile.fraction * 100) + '%';
         cell.appendChild(marker);
       }
@@ -567,6 +826,10 @@ function setupPlanToolbar() {
     const name = input.value.trim();
     if (!name || !planDays) return;
     const named = loadNamedPlans();
+    if (!Object.prototype.hasOwnProperty.call(named, name) && Object.keys(named).length >= MAX_SAVED_PLANS) {
+      alert(T.maxPlansReached);
+      return;
+    }
     named[name] = planSnapshot(planDays);
     saveNamedPlans(named);
     refreshLoadSelect();
@@ -591,6 +854,46 @@ function setupPlanToolbar() {
   refreshLoadSelect();
 }
 
+// --- banner informativo su local storage (non cookie) ---
+const CONSENT_KEY = 'claude-monitor-consent-ack';
+function refreshConsentText() {
+  document.getElementById('consent-text').innerHTML = T.consentText;
+}
+function setupConsentBanner() {
+  refreshConsentText();
+  const banner = document.getElementById('consent-banner');
+  if (!localStorage.getItem(CONSENT_KEY)) {
+    banner.hidden = false;
+  }
+  document.getElementById('consent-ok').addEventListener('click', () => {
+    localStorage.setItem(CONSENT_KEY, '1');
+    banner.hidden = true;
+  });
+}
+
+// --- lingua IT/EN: pill con le due lingue cliccabili separatamente (stile orco.it) ---
+function updateLangSwitchUI() {
+  document.getElementById('lang-opt-it').classList.toggle('active', LOCALE === 'it');
+  document.getElementById('lang-opt-en').classList.toggle('active', LOCALE === 'en');
+}
+function setLocale(lang) {
+  LOCALE = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  T = STRINGS[LOCALE];
+  applyStrings();
+  refreshLoadSelect();
+  renderTzOptions();
+  refreshFormatUI();
+  refreshConsentText();
+  updateLangSwitchUI();
+  if (lastData) render(lastData);
+}
+function setupLangSwitch() {
+  document.getElementById('lang-opt-it').addEventListener('click', () => setLocale('it'));
+  document.getElementById('lang-opt-en').addEventListener('click', () => setLocale('en'));
+  updateLangSwitchUI();
+}
+
 // --- tema chiaro/scuro ---
 function systemPrefersDark() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -606,7 +909,7 @@ function applyTheme() {
     document.documentElement.removeAttribute('data-theme');
   }
   const knob = document.getElementById('theme-knob');
-  knob.style.transform = effectiveTheme() === 'dark' ? 'translateX(18px)' : 'translateX(0)';
+  knob.style.transform = effectiveTheme() === 'dark' ? 'translateX(24px)' : 'translateX(0)';
 }
 function setupThemeSwitch() {
   document.getElementById('theme-switch').addEventListener('click', () => {
@@ -654,23 +957,34 @@ function updateTimeDisplays() {
   document.getElementById('updated').textContent = T.updatedPrefix + formatTime(new Date(lastData.updated_at * 1000));
 }
 
-function setupTzControls() {
+function renderTzOptions() {
   const select = document.getElementById('tz-select');
+  const current = select.value || getTz();
   select.innerHTML = TIMEZONES.map(tz =>
     '<option value="' + tz + '">' + (tz === 'local' ? T.localTz : tz) + '</option>'
   ).join('');
-  select.value = getTz();
+  select.value = current;
+}
+
+function refreshFormatUI() {
+  const isAmpm = getHour12();
+  document.getElementById('format-knob').style.transform = isAmpm ? 'translateX(24px)' : 'translateX(0)';
+  document.getElementById('fmt-label-24h').classList.toggle('active', !isAmpm);
+  document.getElementById('fmt-label-ampm').classList.toggle('active', isAmpm);
+}
+
+function setupTzControls() {
+  renderTzOptions();
+  const select = document.getElementById('tz-select');
   select.addEventListener('change', () => {
     localStorage.setItem(TZ_KEY, select.value);
     updateTimeDisplays();
   });
 
-  const formatBtn = document.getElementById('format-toggle');
-  const refreshFormatLabel = () => { formatBtn.textContent = getHour12() ? 'AM/PM' : '24h'; };
-  refreshFormatLabel();
-  formatBtn.addEventListener('click', () => {
+  refreshFormatUI();
+  document.getElementById('format-toggle').addEventListener('click', () => {
     localStorage.setItem(HOUR12_KEY, getHour12() ? '0' : '1');
-    refreshFormatLabel();
+    refreshFormatUI();
     updateTimeDisplays();
   });
 }
@@ -691,14 +1005,6 @@ function render(data) {
   document.getElementById('hour-bar-fill').style.width = (data.five_hour_pct || 0) + '%';
   document.getElementById('week-pct').textContent = data.used_pct.toFixed(0) + '%';
   document.getElementById('week-bar-fill').style.width = data.used_pct + '%';
-
-  const thresholdEl = document.getElementById('threshold');
-  const thresholdRow = document.getElementById('threshold-row');
-  const diff = data.used_pct - data.target_pct;
-  const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(0) + '%';
-  thresholdEl.textContent = diffStr + ' ' + (data.over_pace ? T.overLimit : T.underLimit);
-  thresholdRow.classList.toggle('over', !!data.over_pace);
-  thresholdRow.classList.toggle('under', !data.over_pace);
 
   updateTimeDisplays();
 
@@ -723,6 +1029,8 @@ applyStrings();
 setupPlanToolbar();
 setupThemeSwitch();
 setupTzControls();
+setupConsentBanner();
+setupLangSwitch();
 poll();
 setInterval(poll, POLL_MS);
 setInterval(renderPlan, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati

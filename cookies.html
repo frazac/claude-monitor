@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Salvataggi locali — claude usage monitor</title>
+<style>
+  :root { --bg:#fff; --fg:#000; --muted:#666; --border:rgba(0,0,0,0.15); }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --fg:#fff; --muted:#999; --border:rgba(255,255,255,0.15); } }
+  :root[data-theme="dark"] { --bg:#000; --fg:#fff; --muted:#999; --border:rgba(255,255,255,0.15); }
+  :root[data-theme="light"] { --bg:#fff; --fg:#000; --muted:#666; --border:rgba(0,0,0,0.15); }
+  body { font-family: monospace; background:var(--bg); color:var(--fg); margin:3rem auto; max-width:600px; padding:0 1rem; font-size:0.8rem; line-height:1.6; }
+  h1 { font-size:0.9rem; font-weight:normal; opacity:0.6; margin:0 0 1.5rem 0; }
+  h2 { font-size:0.8rem; margin:1.6rem 0 0.4rem 0; }
+  .back { display:inline-block; margin-bottom:1.5rem; color:var(--muted); }
+  hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+  table { width:100%; border-collapse:collapse; font-size:0.75rem; margin:0.8rem 0; }
+  th, td { text-align:left; padding:6px 8px 6px 0; border-bottom:1px solid var(--border); vertical-align:top; }
+  code { opacity:0.8; }
+</style>
+</head>
+<body>
+  <a class="back" href="index.html">← claude usage monitor</a>
+  <h1>salvataggi locali (non cookies)</h1>
+
+  <p><em>Ultimo aggiornamento: luglio 2026</em></p>
+  <p><strong>Questo sito non usa cookie.</strong> Usa esclusivamente <code>localStorage</code>, una tecnologia del browser diversa dai cookie: i dati restano solo sul tuo dispositivo, non vengono mai inviati al server ad ogni richiesta (come farebbe un cookie) e nessun sito terzo può leggerli.</p>
+
+  <h2>Cosa viene salvato</h2>
+  <table>
+    <tr><th>Chiave</th><th>Contenuto</th><th>Scopo</th></tr>
+    <tr><td><code>claude-monitor-plan</code></td><td>La tua pianificazione settimanale corrente</td><td>Funzionale: ricordare gli slot che hai attivato</td></tr>
+    <tr><td><code>claude-monitor-named-plans</code></td><td>Le versioni di piano salvate con nome</td><td>Funzionale: permettere più piani salvati</td></tr>
+    <tr><td><code>claude-monitor-theme</code></td><td>Preferenza tema chiaro/scuro</td><td>Funzionale: memorizzare lo switch manuale</td></tr>
+    <tr><td><code>claude-monitor-tz</code></td><td>Fuso orario scelto per gli orari mostrati</td><td>Funzionale</td></tr>
+    <tr><td><code>claude-monitor-hour12</code></td><td>Formato ora (24h / AM-PM)</td><td>Funzionale</td></tr>
+  </table>
+  <p>Nessun dato analitico o di tracciamento viene salvato. Nessuna di queste informazioni viene trasmessa altrove: restano nel tuo browser finché non le cancelli.</p>
+
+  <h2>Come cancellarle</h2>
+  <p>Usa il pulsante "reset piano" nella pagina principale, oppure cancella i dati del sito dalle impostazioni del tuo browser (in genere in "Impostazioni → Privacy → Dati dei siti").</p>
+
+  <hr>
+
+  <h1>local saves (not cookies)</h1>
+  <p><em>Last updated: July 2026</em></p>
+  <p><strong>This site does not use cookies.</strong> It only uses <code>localStorage</code>, a different browser technology: data stays on your device, is never sent to a server with every request (unlike a cookie), and no third-party site can read it.</p>
+
+  <h2>What is stored</h2>
+  <table>
+    <tr><th>Key</th><th>Content</th><th>Purpose</th></tr>
+    <tr><td><code>claude-monitor-plan</code></td><td>Your current weekly plan</td><td>Functional: remember which slots you activated</td></tr>
+    <tr><td><code>claude-monitor-named-plans</code></td><td>Named saved plan versions</td><td>Functional: support several saved plans</td></tr>
+    <tr><td><code>claude-monitor-theme</code></td><td>Light/dark theme preference</td><td>Functional: remember the manual switch</td></tr>
+    <tr><td><code>claude-monitor-tz</code></td><td>Timezone chosen for displayed times</td><td>Functional</td></tr>
+    <tr><td><code>claude-monitor-hour12</code></td><td>Time format (24h / AM-PM)</td><td>Functional</td></tr>
+  </table>
+  <p>No analytics or tracking data is stored. None of this information is transmitted anywhere else: it stays in your browser until you clear it.</p>
+
+  <h2>How to delete it</h2>
+  <p>Use the "reset plan" button on the main page, or clear this site's data from your browser settings (usually under "Settings → Privacy → Site data").</p>
+</body>
+</html>

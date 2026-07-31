@@ -284,16 +284,13 @@ def main():
     )
 
     write_web_state({
+        # nota: day_labels/segments/current_index/daily_quota_pct/over_pace/day_fraction
+        # servivano alla vecchia barra a tacche settimanale, sostituita dal calendario di
+        # pianificazione: non sono più letti dal frontend, tenuti solo per l'output terminale.
         "status": "ok",
         "model": model,
         "used_pct": used_pct,
-        "current_index": current_index,
-        "segments": SEGMENTS,
-        "day_labels": day_labels,
-        "daily_quota_pct": DAILY_QUOTA_PCT,
         "target_pct": target_pct,
-        "over_pace": over_pace,
-        "day_fraction": day_fraction,
         "reset_date": reset_date_str,
         "five_hour_pct": five_hour_pct,
         "five_hour_reset_date": five_hour_reset_str,

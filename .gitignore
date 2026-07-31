@@ -1,0 +1,14 @@
+# note di lavoro personali e prototipi/file sorgente (non da distribuire nel repo pubblico)
+claude.md
+prototipi/
+
+# dati generati a runtime dalla statusline (specifici della macchina/utente)
+data/state.json
+data/worked_cache.json
+
+# python
+__pycache__/
+*.pyc
+
+# os
+.DS_Store
