@@ -1,0 +1,24 @@
+:root {
+  --bg: #fff; --fg: #000; --muted: #666;
+  --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08);
+  --over: #c81450; --under: #2e8b7b;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
+}
+:root[data-theme="dark"] { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
+:root[data-theme="light"] { --bg: #fff; --fg: #000; --muted: #666; --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08); --over: #c81450; --under: #2e8b7b; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: monospace;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 3rem auto;
+  max-width: 600px;
+  padding: 0 1rem;
+}
+h1 { font-size: 0.9rem; font-weight: normal; opacity: 0.6; margin: 0 0 0.4rem 0; }
+
+.hairline { border-top: 1px solid var(--border); }
