@@ -2,23 +2,23 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<title>Claude usage monitor</title>
+<title>Claude Monitor Limes: soglie di utilizzo</title>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-  <h1 id="title">claude usage monitor</h1>
+  <h1 id="title">Claude Monitor Limes: soglie di utilizzo</h1>
   <div class="tagline" id="tagline"></div>
 
   <ul class="stats" id="main-stats">
     <li class="hairline stat-with-bar">
       <div class="stat-row"><span class="stat-key" id="lbl-session">uso sessione</span><span class="stat-val" id="hour-pct">--%</span></div>
-      <div class="bar-track"><div class="bar-fill" id="hour-bar-fill" style="width:0%"></div></div>
+      <div class="bar-track"><div class="bar-fill" id="hour-bar-fill"></div></div>
       <div class="sub-line"><span id="lbl-session-reset">reset sessione</span>: <span id="hour-reset">--</span></div>
     </li>
     <li class="hairline stat-with-bar">
       <div class="stat-row"><span class="stat-key" id="lbl-week">uso settimana</span><span class="stat-val" id="week-pct">--%</span></div>
-      <div class="bar-track"><div class="bar-fill" id="week-bar-fill" style="width:0%"></div></div>
+      <div class="bar-track"><div class="bar-fill" id="week-bar-fill"></div></div>
       <div class="sub-line"><span id="lbl-week-reset">reset settimana</span>: <span id="week-reset">--</span></div>
     </li>
     <li class="hairline" id="threshold-row"><span class="stat-key" id="lbl-threshold">soglia attuale</span><span class="stat-val" id="threshold">--</span></li>
@@ -121,6 +121,7 @@ const STRINGS = window.I18N;
 let T = STRINGS[LOCALE];
 
 const POLL_MS = 5000;
+const STALE_THRESHOLD_MS = 20 * 60 * 1000; // dati più vecchi di 20 min: statusline.py scrive solo con una sessione Claude Code interattiva attiva
 const PLAN_KEY = 'claude-monitor-plan';
 const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
 const MAX_SAVED_PLANS = 10;
@@ -537,6 +538,13 @@ function formatTime(date) {
   if (tz !== 'local') opts.timeZone = tz;
   return date.toLocaleTimeString(T.localeCode, opts);
 }
+function formatDuration(ms) {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) return hours + T.hourUnit + ' ' + minutes + T.minuteUnit;
+  return minutes + T.minuteUnit;
+}
 
 function updateTimeDisplays() {
   if (!lastData || lastData.status !== 'ok') return;
@@ -556,7 +564,13 @@ function updateTimeDisplays() {
     document.getElementById('hour-reset').textContent = '--';
   }
 
-  setUpdatedMessage(T.updatedPrefix + formatTime(new Date(lastData.updated_at * 1000)), false);
+  const updatedAtDate = new Date(lastData.updated_at * 1000);
+  const staleMs = now - updatedAtDate.getTime();
+  const isStale = staleMs > STALE_THRESHOLD_MS;
+  setUpdatedMessage(
+    (isStale ? T.staleDataPrefix + formatDuration(staleMs) + ' — ' : T.updatedPrefix) + formatTime(updatedAtDate),
+    isStale
+  );
 }
 
 function renderTzOptions() {

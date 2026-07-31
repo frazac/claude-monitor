@@ -18,7 +18,8 @@ body {
   margin: 3rem auto;
   max-width: 600px;
   padding: 0 1rem;
+  line-height: 1.7em;
 }
-h1 { font-size: 0.9rem; font-weight: normal; opacity: 0.6; margin: 0 0 0.4rem 0; }
+h1 { font-size: 0.8rem; font-weight: normal; opacity: 1; color: var(--muted); margin: 0 0 0.4rem 0; }
 
 .hairline { border-top: 1px solid var(--border); }
