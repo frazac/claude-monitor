@@ -169,6 +169,28 @@
 .inline-icon { display: inline-flex; vertical-align: -3px; }
 .inline-icon svg { width: 13px; height: 13px; display: block; }
 
+.stream-banner {
+  margin-bottom: 1.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: 0.85rem;
+}
+.stream-banner.disconnected { color: var(--over); border-color: var(--over); }
+.stream-banner.connected { color: var(--under); border-color: var(--under); }
+.stream-banner-title { font-weight: 600; }
+.stream-banner-cmd { margin-top: 0.4rem; opacity: 0.9; }
+.stream-banner-cmd code {
+  font-family: inherit;
+  background: var(--tile-fill);
+  color: var(--fg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 0.2rem;
+}
+.stream-banner.connected .stream-banner-cmd { display: none; }
+
 .updated { opacity: 0.4; font-size: 0.8rem; margin-top: 1rem; }
 .updated.error {
   opacity: 1;

@@ -10,6 +10,11 @@
   <h1 id="title">Claude Monitor Limes: soglie di utilizzo</h1>
   <div class="tagline" id="tagline"></div>
 
+  <div class="stream-banner disconnected" id="stream-banner">
+    <div class="stream-banner-title" id="stream-banner-title"></div>
+    <div class="stream-banner-cmd" id="stream-banner-cmd"></div>
+  </div>
+
   <ul class="stats" id="main-stats">
     <li class="hairline stat-with-bar">
       <div class="stat-row"><span class="stat-key" id="lbl-session">uso sessione</span><span class="stat-val" id="hour-pct">--%</span></div>
@@ -173,6 +178,17 @@ function applyStrings() {
   document.getElementById('lbl-made-with').innerHTML = T.madeWithPrefix +
     '<a href="https://short.masterismi.com/sitoistituzionale" target="_blank" rel="noopener">masterismi.com</a>' +
     T.madeWithSuffix;
+  document.getElementById('stream-banner-cmd').innerHTML = T.streamDisconnectedHint + '<br><code>python3 install-statusline.py</code>';
+  setStreamBanner(streamConnected);
+}
+
+let streamConnected = false;
+function setStreamBanner(connected) {
+  streamConnected = connected;
+  const banner = document.getElementById('stream-banner');
+  banner.classList.toggle('connected', connected);
+  banner.classList.toggle('disconnected', !connected);
+  document.getElementById('stream-banner-title').textContent = connected ? T.streamConnected : T.streamDisconnected;
 }
 
 function parseResetDate(str) {
@@ -547,7 +563,10 @@ function formatDuration(ms) {
 }
 
 function updateTimeDisplays() {
-  if (!lastData || lastData.status !== 'ok') return;
+  if (!lastData || lastData.status !== 'ok') {
+    setStreamBanner(false);
+    return;
+  }
   const now = Date.now();
 
   const weekResetDate = parseResetDate(lastData.reset_date);
@@ -571,6 +590,7 @@ function updateTimeDisplays() {
     (isStale ? T.staleDataPrefix + formatDuration(staleMs) + ' — ' : T.updatedPrefix) + formatTime(updatedAtDate),
     isStale
   );
+  setStreamBanner(!isStale);
 }
 
 function renderTzOptions() {
@@ -616,6 +636,7 @@ function render(data) {
     document.getElementById('week-pct').textContent = '--%';
     document.getElementById('hour-pct').textContent = '--%';
     setUpdatedMessage(data && data.status === 'n/d' ? T.noApiResponse : T.waitingData, data && data.status === 'n/d');
+    setStreamBanner(false);
     return;
   }
   lastData = data;
@@ -643,9 +664,11 @@ async function poll() {
       render(await res.json());
     } else {
       setUpdatedMessage(T.stateNotFound, true);
+      setStreamBanner(false);
     }
   } catch (e) {
     setUpdatedMessage(T.stateNotFound, true);
+    setStreamBanner(false);
   }
 }
 
