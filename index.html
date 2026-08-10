@@ -378,6 +378,9 @@ function renderPlan() {
     const icon = document.createElement('div');
     icon.className = 'axis-icon';
     icon.innerHTML = ICONS[key];
+    icon.style.gridColumn = '1'; // esplicito: l'ultima icona condivide la riga della penultima
+    // (entrambe ai due bordi dell'ultima fascia), senza questo l'auto-placement le
+    // metterebbe in colonne diverse pensando che si sovrappongano
     if (i < SLOT_KEYS.length) {
       icon.style.gridRow = String(i + 1);
       icon.style.alignSelf = 'start';
