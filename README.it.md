@@ -62,6 +62,31 @@ sistemarlo; diventa verde ("Stream collegato") appena arrivano dati freschi.
    sopra. Si aggiorna da sola ogni 15 secondi mentre è inattiva, e subito dopo ogni
    risposta.
 
+## Personalizzare le fasce della giornata
+
+Di default il calendario divide ogni giorno in 3 fasce fisse (mattina/pomeriggio/sera,
+orari asimmetrici pensati per una giornata tipo) con 4 icone tematiche ai confini
+(caffè, mela, pizza, letto). Per usare un numero diverso di fasce (1-12) e/o un
+intervallo orario diverso per la giornata attiva, lancia:
+
+```
+python3 configure-slots.py
+```
+
+Chiede l'ora di inizio/fine della giornata attiva e in quante fasce di uguale durata
+dividerla, e scrive `data/slot-config.json` — letto sia dalla dashboard web sia da
+`statusline.py`, così restano sempre d'accordo sulla stessa definizione di fascia
+(questo file non esiste finché non lanci lo script; in sua assenza il preset di
+default a 3 fasce resta invariato). Le icone di confine oltre le 4 originali vengono
+pescate da un pool più ampio di default (modifica `DEFAULT_BOUNDARY_ICON_POOL` in
+`js/app.js` per usare le tue). Lancia `python3 configure-slots.py --reset` per
+tornare al preset di default in qualsiasi momento.
+
+**Nota:** cambiare numero di fasce/orari cambia anche il formato delle chiavi con cui
+il piano viene salvato nel browser — un piano salvato con una configurazione non si
+applica automaticamente a una diversa (non viene cancellato, semplicemente non viene
+applicato finché non torni a quella configurazione).
+
 ## Requisiti
 
 - Python 3

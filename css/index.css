@@ -122,7 +122,7 @@
 .axis-icon svg { width: 14px; height: 14px; display: block; }
 
 .tile {
-  height: 46px;
+  height: var(--tile-h, 46px);
   border: 1px solid var(--border);
   position: relative;
   display: flex;

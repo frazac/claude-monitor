@@ -12,18 +12,79 @@ const ICONS = {
   sun: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 12L23 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 2V1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 23V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 20L19 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 4L19 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 20L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1 12L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5066C3 16.7497 7.25034 21 12.4934 21C16.2209 21 19.4466 18.8518 21 15.7259C12.4934 15.7259 8.27411 11.5066 8.27411 3C5.14821 4.55344 3 7.77915 3 11.5066Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+  // icone extra di default per l'asse dei confini quando personalizzi il numero
+  // di fasce oltre le 4 tematiche (caffè/mela/pizza/letto): usale nell'ordine
+  // che preferisci, o sostituiscile con le tue nel pool più sotto.
+  extra1: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 14C9 15.6099 10.3771 16 12.0758 16C14.9661 16 15.9206 14.3333 13.9982 11C11.3069 14 10.9224 9.33333 11.3069 8C10.1534 10 9 11.8785 9 14Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 16C15.1559 16 17 13.9024 17 10.3125C17 6.72265 12 3 12 3C12 3 7 6.72265 7 10.3125C7 13.9024 8.84409 16 12 16Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4.27258 21.0703L19.7274 16.9292" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M4.27259 16.9292L12 18.9998" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M19.7274 21.0703L15.8637 20.035" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>',
+  extra2: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 12H17M8 12L6 10H2L4 12L2 14H6L8 12ZM17 12L15 10M17 12L15 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 22.5C18.7614 22.5 21 17.799 21 12C21 6.20101 18.7614 1.5 16 1.5C13.2386 1.5 11 6.20101 11 12C11 17.799 13.2386 22.5 16 22.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra3: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 7C15.1046 7 16 6.10457 16 5C16 3.89543 15.1046 3 14 3C12.8954 3 12 3.89543 12 5C12 6.10457 12.8954 7 14 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C16.3431 15 15 16.3431 15 18C15 19.6569 16.3431 21 18 21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 21C7.65685 21 9 19.6569 9 18C9 16.3431 7.65685 15 6 15C4.34315 15 3 16.3431 3 18C3 19.6569 4.34315 21 6 21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.5 18L13 14L8.11768 12L11.1179 8.50006L14.1179 11.0001L17.6179 11.0001" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra4: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 19L7.33333 20L16.6667 20L19 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 22.01L8.01 21.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 22.01L16.01 21.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7 7.8335C7 7.8335 8.82843 6.91929 10 6.3335C12 5.3335 14.2705 6.90111 14.2705 6.90111L9.96227 10.0363L14 13.3335V17.3335" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.54875 13.3445L8.30818 14.1716H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15.1653 9.20935H17.887" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M17 6C18.1046 6 19 5.10457 19 4C19 2.89543 18.1046 2 17 2C15.8954 2 15 2.89543 15 4C15 5.10457 15.8954 6 17 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra5: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 13V16C21 18.2091 19.2091 20 17 20H7C4.79086 20 3 18.2091 3 16V13.6C3 13.2686 3.26863 13 3.6 13H21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 20L17 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 20L7 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M21 13V7C21 4.79086 19.2091 3 17 3H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15.4 8H8.60003C8.26865 8 8.00393 7.7317 8.04019 7.4023C8.18624 6.07539 8.86312 3 12 3C15.1369 3 15.8138 6.07539 15.9598 7.4023C15.9961 7.73169 15.7314 8 15.4 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra6: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.7781 4.04337C17.7007 2.08074 14.9382 1 12 1C9.0618 1 6.29934 2.08089 4.2217 4.04337C2.14423 6.00617 1 8.61557 1 11.3911C1 11.7274 1.28853 12 1.64437 12C2.00038 12 2.28891 11.7274 2.28891 11.3911C2.28891 10.3784 3.16123 9.55439 4.23328 9.55439C6.12573 9.55439 5.43138 12 6.82219 12C8.21299 12 7.51871 9.55439 9.41109 9.55439C11.3035 9.55439 12 12 12 12C12 12 12.6965 9.55439 14.5889 9.55439C16.4813 9.55439 15.988 12 17.1778 12C18.3677 12 17.8743 9.55439 19.7667 9.55439C20.8388 9.55439 21.7111 10.3784 21.7111 11.3911C21.7111 11.7274 21.9996 12 22.3556 12C22.7115 12 23 11.7274 23 11.3911C23 8.61557 21.8559 6.00617 19.7781 4.04337Z" stroke="currentColor" stroke-width="1.5"></path><path d="M12 12C12 12 12 16.0948 12 20C12 24 6 24 6 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra7: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 12.5C17.2761 12.5 17.5 12.2761 17.5 12C17.5 11.7239 17.2761 11.5 17 11.5C16.7239 11.5 16.5 11.7239 16.5 12C16.5 12.2761 16.7239 12.5 17 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5C12.2761 12.5 12.5 12.2761 12.5 12C12.5 11.7239 12.2761 11.5 12 11.5C11.7239 11.5 11.5 11.7239 11.5 12C11.5 12.2761 11.7239 12.5 12 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7 12.5C7.27614 12.5 7.5 12.2761 7.5 12C7.5 11.7239 7.27614 11.5 7 11.5C6.72386 11.5 6.5 11.7239 6.5 12C6.5 12.2761 6.72386 12.5 7 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.8214 2.48697 15.5291 3.33782 17L2.5 21.5L7 20.6622C8.47087 21.513 10.1786 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra8: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 15.5V2.6C2 2.26863 2.26863 2 2.6 2H21.4C21.7314 2 22 2.26863 22 2.6V15.5M2 15.5V17.4C2 17.7314 2.26863 18 2.6 18H21.4C21.7314 18 22 17.7314 22 17.4V15.5M2 15.5H22M9 22H10.5M10.5 22V18M10.5 22H13.5M13.5 22H15M13.5 22L13.5 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
 };
 
 // =========================================================================
 // PERSONALIZZAZIONE: fasce della giornata (righe del calendario) e icone che
-// ne segnano i confini. Per aggiungere/togliere fasce, modifica insieme le
-// tre costanti sotto, mantenendo BOUNDARY_ICON_KEYS lungo SLOT_KEYS.length+1
-// (una icona prima della prima fascia, una dopo ciascuna fascia successiva).
-// Le icone disponibili sono quelle elencate in ICONS qui sopra.
+// ne segnano i confini.
+//
+// Preset di default (nessuna personalizzazione salvata): 3 fasce fisse
+// (mattina/pomeriggio/sera, orari asimmetrici pensati per una giornata tipo)
+// con le 4 icone tematiche originali — comportamento identico a sempre.
+//
+// Se l'utente personalizza tramite `configure-slots.py` (ora di inizio/fine
+// giornata attiva + numero di fasce, 1-12, condiviso con statusline.py via
+// data/slot-config.json — vedi loadSlotConfig()), le fasce diventano N
+// intervalli di uguale durata tra le due ore scelte, con chiavi numeriche
+// ("0".."N-1") invece dei nomi mattina/pomeriggio/sera, e i confini pescano
+// le icone dal pool DEFAULT_BOUNDARY_ICON_POOL qui sotto, in ciclo se N+1
+// supera la lunghezza del pool. Personalizza il pool (o la sua lunghezza)
+// per usare le tue icone al posto delle 8 extra di default.
 // =========================================================================
-const SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
-const SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
-const BOUNDARY_ICON_KEYS = ['coffee', 'apple', 'pizza', 'bed'];
+const DEFAULT_SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
+const DEFAULT_SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
+const DEFAULT_BOUNDARY_ICON_KEYS = ['coffee', 'apple', 'pizza', 'bed'];
+const DEFAULT_BOUNDARY_ICON_POOL = ['coffee', 'apple', 'pizza', 'bed', 'extra1', 'extra2', 'extra3', 'extra4', 'extra5', 'extra6', 'extra7', 'extra8'];
+
+let SLOT_KEYS = DEFAULT_SLOT_KEYS;
+let SLOT_BOUNDS = DEFAULT_SLOT_BOUNDS;
+let BOUNDARY_ICON_KEYS = DEFAULT_BOUNDARY_ICON_KEYS;
+
+// genera N fasce di uguale durata tra dayStart e dayEnd (ore, 0-24); slot_for_hour
+// (qui e in statusline.py, dove la stessa logica è duplicata in Python) assegna
+// ogni ora della fascia [dayStart, dayEnd) allo slot corrispondente, e qualunque
+// ora FUORI da quell'intervallo all'ultimo slot (stesso comportamento del preset
+// di default, dove "sera" raccoglie anche l'eventuale notte fuori 0-24).
+function buildSlotsFromConfig(cfg) {
+  const n = cfg.slot_count;
+  const keys = Array.from({ length: n }, (_, i) => String(i));
+  const bounds = {};
+  const step = (cfg.day_end - cfg.day_start) / n;
+  keys.forEach((key, i) => {
+    bounds[key] = { start: cfg.day_start + i * step, end: cfg.day_start + (i + 1) * step };
+  });
+  const icons = Array.from({ length: n + 1 }, (_, i) => DEFAULT_BOUNDARY_ICON_POOL[i % DEFAULT_BOUNDARY_ICON_POOL.length]);
+  return { keys, bounds, icons };
+}
+
+// data/slot-config.json non esiste finché non lanci `configure-slots.py` (stesso
+// pattern di data/display-config.json per la scelta della statusline): in sua
+// assenza si resta sul preset di default sopra, invariato.
+async function loadSlotConfig() {
+  try {
+    const res = await fetch('data/slot-config.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const cfg = await res.json();
+    if (!cfg || !cfg.slot_count) return;
+    const built = buildSlotsFromConfig(cfg);
+    SLOT_KEYS = built.keys;
+    SLOT_BOUNDS = built.bounds;
+    BOUNDARY_ICON_KEYS = built.icons;
+  } catch (e) {
+    // nessun file, o non valido: resta sul preset di default
+  }
+}
 // =========================================================================
 
 // traduzioni caricate da file esterni (i18n/it.js, i18n/en.js): per aggiungere
@@ -256,6 +317,11 @@ function renderPlan() {
     thresholdEl.textContent = '--';
     thresholdRow.classList.remove('over', 'under');
   }
+
+  // righe più basse quando le fasce sono di più (fino a 12): rimane leggibile
+  // sia col preset di default (3 fasce, 46px) sia con configurazioni più fitte.
+  const tileHeight = Math.max(24, 46 - (SLOT_KEYS.length - 3) * 2);
+  document.documentElement.style.setProperty('--tile-h', tileHeight + 'px');
 
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -605,12 +671,16 @@ async function poll() {
   }
 }
 
-applyStrings();
-setupPlanToolbar();
-setupThemeSwitch();
-setupTzControls();
-setupConsentBanner();
-setupLangSwitch();
-poll();
-setInterval(poll, POLL_MS);
-setInterval(() => { if (!window.DEBUG_PAUSE_REFRESH) renderPlan(); }, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
+(async function init() {
+  await loadSlotConfig(); // deve completare prima del primo render: SLOT_KEYS/SLOT_BOUNDS
+  // influenzano sia il testo (buildExplanationHTML) sia il modello del piano
+  applyStrings();
+  setupPlanToolbar();
+  setupThemeSwitch();
+  setupTzControls();
+  setupConsentBanner();
+  setupLangSwitch();
+  poll();
+  setInterval(poll, POLL_MS);
+  setInterval(() => { if (!window.DEBUG_PAUSE_REFRESH) renderPlan(); }, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
+})();

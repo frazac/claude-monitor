@@ -58,6 +58,29 @@ as soon as fresh data comes in.
    It refreshes on its own every 15 seconds while idle, and immediately after every
    response.
 
+## Customizing the day slots
+
+By default the calendar splits each day into 3 fixed slots (morning/afternoon/evening,
+uneven hours meant to match a typical day) with 4 themed boundary icons (coffee, apple,
+pizza, bed). To use a different number of slots (1-12) and/or a different active-day
+time range, run:
+
+```
+python3 configure-slots.py
+```
+
+It asks for the start/end hour of your active day and how many equal-length slots to
+split it into, and writes `data/slot-config.json` — read by **both** the web dashboard
+and `statusline.py`, so they always agree on the same slot definitions (this file
+doesn't exist until you run the script; without it, the default 3-slot preset is
+unchanged). Boundary icons beyond the original 4 are pulled from a larger default pool
+(edit `DEFAULT_BOUNDARY_ICON_POOL` in `js/app.js` to use your own). Run
+`python3 configure-slots.py --reset` to go back to the default preset at any time.
+
+**Note:** changing the slot count/hours changes the format of the keys your plan is
+saved under in the browser — a plan saved under one configuration won't carry over to
+a different one (it isn't deleted, just not applied until you switch back).
+
 ## Requirements
 
 - Python 3

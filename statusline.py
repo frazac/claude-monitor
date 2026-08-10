@@ -15,10 +15,43 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_STATE_FILE = os.path.join(SCRIPT_DIR, "data", "state.json")
 WORKED_CACHE_FILE = os.path.join(SCRIPT_DIR, "data", "worked_cache.json")
 DISPLAY_CONFIG_FILE = os.path.join(SCRIPT_DIR, "data", "display-config.json")
+SLOT_CONFIG_FILE = os.path.join(SCRIPT_DIR, "data", "slot-config.json")
 CLAUDE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
 WORK_THRESHOLD_MINUTES = 15  # minuti distinti di attività per considerare uno slot "lavorato"
 WORKED_CACHE_TTL = 60  # secondi: non ri-scansionare i log più spesso di così
-SLOT_BOUNDS = {"mattina": (0, 12), "pomeriggio": (12, 19), "sera": (19, 24)}
+
+
+def load_slot_config():
+    """Se data/slot-config.json esiste (creato da configure-slots.py), genera N fasce
+    di uguale durata tra day_start e day_end, con chiavi numeriche "0".."N-1" — stessa
+    identica logica di buildSlotsFromConfig() in js/app.js, le due DEVONO restare in
+    sincronia: entrambe leggono lo stesso file, quindi condividono sempre la stessa
+    definizione di fascia, altrimenti il marcatore "log data" del calendario web non
+    corrisponderebbe più agli slot letti da qui. In assenza del file, resta il preset
+    di default (mattina/pomeriggio/sera) invariato rispetto a sempre."""
+    try:
+        with open(SLOT_CONFIG_FILE) as f:
+            cfg = json.load(f)
+        n = cfg.get("slot_count")
+        day_start = cfg.get("day_start")
+        day_end = cfg.get("day_end")
+        if not n or day_start is None or day_end is None:
+            return None
+        step = (day_end - day_start) / n
+        keys = [str(i) for i in range(n)]
+        bounds = {keys[i]: (day_start + i * step, day_start + (i + 1) * step) for i in range(n)}
+        return keys, bounds
+    except Exception:
+        return None
+
+
+_custom_slots = load_slot_config()
+if _custom_slots:
+    SLOT_KEYS_ORDER, SLOT_BOUNDS = _custom_slots
+else:
+    SLOT_KEYS_ORDER = ["mattina", "pomeriggio", "sera"]
+    SLOT_BOUNDS = {"mattina": (0, 12), "pomeriggio": (12, 19), "sera": (19, 24)}
+
 TICK_FULL = "█"
 TICK_EMPTY = "░"
 RED = "\033[31m"
@@ -67,7 +100,10 @@ def slot_for_hour(hour_float):
     for key, (start, end) in SLOT_BOUNDS.items():
         if start <= hour_float < end:
             return key
-    return "sera"
+    return SLOT_KEYS_ORDER[-1]  # fuori da [day_start, day_end): conta per l'ultima fascia
+
+
+SLOT_BOUNDS_SIGNATURE = json.dumps(SLOT_BOUNDS, sort_keys=True)
 
 
 def load_worked_cache():
@@ -76,11 +112,18 @@ def load_worked_cache():
             cache = json.load(f)
     except Exception:
         cache = {}
+    # se i confini delle fasce sono cambiati (configure-slots.py) da quando la cache è
+    # stata scritta, gli offset per-file salvati punterebbero a byte già "consumati" con
+    # la vecchia mappatura ora/fascia: si perderebbero minuti già passati sotto le nuove
+    # fasce. Invalidare tutto e ripartire da zero è l'unico modo corretto di recuperarli.
+    if cache.get("slot_bounds_signature") != SLOT_BOUNDS_SIGNATURE:
+        cache = {}
     cache.setdefault("offsets", {})
     cache.setdefault("minutes", {})
     cache.setdefault("worked", {})
     cache.setdefault("last_update", 0)
     cache.setdefault("last_window_start", None)
+    cache["slot_bounds_signature"] = SLOT_BOUNDS_SIGNATURE
     return cache
 
 

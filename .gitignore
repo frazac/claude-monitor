@@ -6,6 +6,7 @@ prototipi/
 data/state.json
 data/worked_cache.json
 data/display-config.json
+data/slot-config.json
 
 # python
 __pycache__/
