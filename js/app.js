@@ -1,0 +1,616 @@
+const LANG_KEY = 'claude-monitor-lang';
+function detectLocale() {
+  return (navigator.language || 'en').toLowerCase().startsWith('it') ? 'it' : 'en';
+}
+let LOCALE = localStorage.getItem(LANG_KEY) || detectLocale();
+
+const ICONS = {
+  coffee: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 11.6V15C17 18.3137 14.3137 21 11 21H9C5.68629 21 3 18.3137 3 15V11.6C3 11.2686 3.26863 11 3.6 11H16.4C16.7314 11 17 11.2686 17 11.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 9C12 8 12.7143 7 14.1429 7V7C15.7208 7 17 5.72081 17 4.14286V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 9V8.5C8 6.84315 9.34315 5.5 11 5.5V5.5C12.1046 5.5 13 4.60457 13 3.5V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 11H18.5C19.8807 11 21 12.1193 21 13.5C21 14.8807 19.8807 16 18.5 16H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  apple: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.1471 21.2646L12 21.2351L11.8529 21.2646C9.47627 21.7399 7.23257 21.4756 5.59352 20.1643C3.96312 18.86 2.75 16.374 2.75 12C2.75 7.52684 3.75792 5.70955 5.08541 5.04581C5.77977 4.69863 6.67771 4.59759 7.82028 4.72943C8.96149 4.86111 10.2783 5.21669 11.7628 5.71153L12.0235 5.79841L12.2785 5.69638C14.7602 4.70367 16.9909 4.3234 18.5578 5.05463C20.0271 5.7403 21.25 7.59326 21.25 12C21.25 16.374 20.0369 18.86 18.4065 20.1643C16.7674 21.4756 14.5237 21.7399 12.1471 21.2646Z" stroke="currentColor" stroke-width="1.5"></path><path d="M12 5.5C12 3 11 2 9 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 6V21" stroke="currentColor" stroke-width="1.5"></path><path d="M15 12L15 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  pizza: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 9.01L14.01 8.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 8.01L8.01 7.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 14.01L8.01 13.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 19L2.23626 3.0041C2.13087 2.55618 2.54815 2.16122 2.98961 2.29106L19 7" stroke="currentColor" stroke-width="1.5"></path><path d="M22.198 8.42467C22.4324 7.48703 21.8623 6.5369 20.9247 6.30249C19.987 6.06808 19.0369 6.63816 18.8025 7.5758C18.4106 9.14318 16.9015 11.6241 14.5753 13.9503C12.2743 16.2513 9.42714 18.1442 6.60672 18.7951C5.66497 19.0124 5.07771 19.952 5.29504 20.8937C5.51236 21.8355 6.45198 22.4227 7.39373 22.2054C11.0734 21.3563 14.4762 18.9991 17.0502 16.4252C19.5989 13.8764 21.5898 10.8573 22.198 8.42467Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>',
+  bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 12L23 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 2V1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 23V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 20L19 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 4L19 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 20L5 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1 12L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 11.5066C3 16.7497 7.25034 21 12.4934 21C16.2209 21 19.4466 18.8518 21 15.7259C12.4934 15.7259 8.27411 11.5066 8.27411 3C5.14821 4.55344 3 7.77915 3 11.5066Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+};
+
+// =========================================================================
+// PERSONALIZZAZIONE: fasce della giornata (righe del calendario) e icone che
+// ne segnano i confini. Per aggiungere/togliere fasce, modifica insieme le
+// tre costanti sotto, mantenendo BOUNDARY_ICON_KEYS lungo SLOT_KEYS.length+1
+// (una icona prima della prima fascia, una dopo ciascuna fascia successiva).
+// Le icone disponibili sono quelle elencate in ICONS qui sopra.
+// =========================================================================
+const SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
+const SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
+const BOUNDARY_ICON_KEYS = ['coffee', 'apple', 'pizza', 'bed'];
+// =========================================================================
+
+// traduzioni caricate da file esterni (i18n/it.js, i18n/en.js): per aggiungere
+// una lingua basta un nuovo i18n/<lang>.js con lo stesso set di chiavi, più il
+// suo <script> in fondo all'head e l'opzione nel lang-switch.
+const STRINGS = window.I18N;
+let T = STRINGS[LOCALE];
+
+const POLL_MS = 5000;
+const STALE_THRESHOLD_MS = 20 * 60 * 1000; // dati più vecchi di 20 min: statusline.py scrive solo con una sessione Claude Code interattiva attiva
+const PLAN_KEY = 'claude-monitor-plan';
+const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
+const MAX_SAVED_PLANS = 10;
+const THEME_KEY = 'claude-monitor-theme';
+const TZ_KEY = 'claude-monitor-tz';
+const HOUR12_KEY = 'claude-monitor-hour12';
+const TIMEZONES = ['local', 'UTC', 'Europe/Rome', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'Asia/Shanghai'];
+
+let planDays = null; // costruito una volta noto resets_at
+let lastData = null; // ultimo state.json valido, per riformattare gli orari senza ripollare
+
+function buildExplanationHTML() {
+  const boundaryLine = BOUNDARY_ICON_KEYS.map((iconKey, i) =>
+    (T.boundaryLabels[i] || '') + ' <span class="inline-icon">' + ICONS[iconKey] + '</span>'
+  ).join(' · ');
+  return '<p>' + T.explanation + '</p>' +
+    '<p>' + T.boundaryIntro + ' ' + boundaryLine + '.</p>' +
+    '<p>' + T.planSaved + ' (<a href="cookies.html">' + T.planSavedDetails + '</a>)' + T.planSavedRest + '</p>';
+}
+
+function applyStrings() {
+  document.documentElement.lang = LOCALE;
+  document.title = T.title;
+  document.getElementById('title').textContent = T.title;
+  document.getElementById('tagline').textContent = T.tagline;
+  document.getElementById('lbl-session').textContent = T.session;
+  document.getElementById('lbl-week').textContent = T.week;
+  document.getElementById('lbl-week-reset').textContent = T.weekReset;
+  document.getElementById('lbl-session-reset').textContent = T.sessionReset;
+  document.getElementById('lbl-threshold').textContent = T.threshold;
+  document.getElementById('lbl-plan-target-slot').textContent = T.planTargetSlot;
+  document.getElementById('lbl-plan-target-day').textContent = T.planTargetDay;
+  document.getElementById('lbl-legend-plan').textContent = T.legendPlan;
+  document.getElementById('lbl-legend-log').textContent = T.legendLog;
+  document.getElementById('lbl-legend-under').textContent = T.legendUnder;
+  document.getElementById('lbl-legend-over').textContent = T.legendOver;
+  document.getElementById('reset-plan').textContent = T.resetPlan;
+  document.getElementById('plan-name').placeholder = T.planNamePlaceholder;
+  document.getElementById('save-plan').textContent = T.savePlan;
+  document.getElementById('explanation').innerHTML = buildExplanationHTML();
+  document.getElementById('icon-sun').innerHTML = ICONS.sun;
+  document.getElementById('icon-moon').innerHTML = ICONS.moon;
+  document.getElementById('icon-globe').innerHTML = ICONS.globe;
+  document.getElementById('lbl-privacy-link2').textContent = T.privacyLink;
+  document.getElementById('lbl-storage-link2').textContent = T.storageLink;
+  document.getElementById('lbl-icons-credit').innerHTML = T.iconsCreditPrefix +
+    '<a href="https://iconoir.com/" target="_blank" rel="noopener">iconoir.com</a> &amp; ' +
+    '<a href="https://lucide.dev/" target="_blank" rel="noopener">lucide.dev</a>';
+  document.getElementById('lbl-made-with').innerHTML = T.madeWithPrefix +
+    '<a href="https://short.masterismi.com/sitoistituzionale" target="_blank" rel="noopener">masterismi.com</a>' +
+    T.madeWithSuffix;
+  document.getElementById('stream-banner-cmd').innerHTML = T.streamDisconnectedHint + '<br><code>python3 install-statusline.py</code>';
+  setStreamBanner(streamConnected);
+}
+
+let streamConnected = false;
+function setStreamBanner(connected) {
+  streamConnected = connected;
+  const banner = document.getElementById('stream-banner');
+  banner.classList.toggle('connected', connected);
+  banner.classList.toggle('disconnected', !connected);
+  document.getElementById('stream-banner-title').textContent = connected ? T.streamConnected : T.streamDisconnected;
+}
+
+function parseResetDate(str) {
+  // formato "dd/mm/yyyy HH:MM"
+  const [datePart, timePart] = str.split(' ');
+  const [dd, mm, yyyy] = datePart.split('/').map(Number);
+  const [HH, MI] = timePart.split(':').map(Number);
+  return new Date(yyyy, mm - 1, dd, HH, MI, 0);
+}
+
+function dateOnly(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function isoDateLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function computeSevenDays(resetsAt) {
+  const windowStart = new Date(resetsAt.getTime() - 7 * 86400 * 1000);
+  let startDate;
+  if (windowStart.getHours() < 11) {
+    startDate = dateOnly(windowStart);
+  } else {
+    startDate = new Date(dateOnly(windowStart).getTime() + 86400 * 1000);
+  }
+  const result = [];
+  for (let offset = 0; offset < 7; offset++) {
+    result.push(new Date(startDate.getTime() + offset * 86400 * 1000));
+  }
+  return result;
+}
+
+function loadPlan() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAN_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePlan(plan) {
+  localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+}
+
+function loadNamedPlans() {
+  try {
+    return JSON.parse(localStorage.getItem(NAMED_PLANS_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveNamedPlans(named) {
+  localStorage.setItem(NAMED_PLANS_KEY, JSON.stringify(named));
+}
+
+// le chiavi di piano usano il numero del giorno (0-6, come Date.getDay()) e non
+// l'abbreviazione localizzata, così il piano salvato non dipende dalla lingua.
+function defaultActive(weekdayNum, key) {
+  if (weekdayNum === 0 || weekdayNum === 6) return false; // domenica, sabato
+  return SLOT_KEYS.indexOf(key) < 2; // le prime due fasce del giorno sono attive di default
+}
+
+function buildDayModel(dates, plan) {
+  return dates.map(d => {
+    const weekdayNum = d.getDay();
+    const slots = SLOT_KEYS.map(key => {
+      const planKey = weekdayNum + ':' + key;
+      const active = Object.prototype.hasOwnProperty.call(plan, planKey) ? plan[planKey] : defaultActive(weekdayNum, key);
+      return { key, active };
+    });
+    return { date: d, weekdayNum, slots };
+  });
+}
+
+function persistPlan(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.weekdayNum + ':' + slot.key] = slot.active; });
+  });
+  savePlan(plan);
+}
+
+function planSnapshot(days) {
+  const plan = {};
+  days.forEach(day => {
+    day.slots.forEach(slot => { plan[day.weekdayNum + ':' + slot.key] = slot.active; });
+  });
+  return plan;
+}
+
+function flatten(days) {
+  const tiles = [];
+  days.forEach((day, dayIdx) => {
+    day.slots.forEach((slot, slotIdx) => tiles.push({ day, dayIdx, slot, slotIdx }));
+  });
+  return tiles;
+}
+
+function computePlanTargets(days, now) {
+  const all = flatten(days);
+  const total = all.filter(t => t.slot.active).length;
+  const weight = total > 0 ? 100 / total : 0;
+  const today = dateOnly(now);
+  const nowHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+
+  let targetDay = 0;
+  let targetSlot = 0;
+  let currentTile = null;
+  let counter = 0;
+  const numbering = new Map(); // "dayIdx:slotKey" -> numero progressivo
+
+  for (const t of all) {
+    if (t.slot.active) {
+      counter++;
+      numbering.set(t.dayIdx + ':' + t.slot.key, counter);
+    }
+    const tDate = dateOnly(t.day.date);
+    if (tDate.getTime() < today.getTime()) {
+      if (t.slot.active) { targetDay += weight; targetSlot += weight; }
+    } else if (tDate.getTime() === today.getTime()) {
+      if (t.slot.active) targetDay += weight;
+      const b = SLOT_BOUNDS[t.slot.key];
+      if (nowHour >= b.start) {
+        if (t.slot.active) targetSlot += weight;
+      }
+      if (nowHour >= b.start && nowHour < b.end) {
+        const fraction = (nowHour - b.start) / (b.end - b.start);
+        currentTile = { dayIdx: t.dayIdx, slotKey: t.slot.key, fraction };
+      }
+    }
+  }
+  return { total, weight, targetDay, targetSlot, currentTile, numbering };
+}
+
+function renderPlan() {
+  if (!planDays) return;
+  const now = new Date();
+  const { targetDay, targetSlot, weight, currentTile, numbering } = computePlanTargets(planDays, now);
+
+  document.getElementById('plan-target-slot').textContent = targetSlot.toFixed(0) + '%';
+  document.getElementById('plan-target-day').textContent = targetDay.toFixed(0) + '%';
+
+  // "soglia attuale" dipende dal piano: confronta l'uso reale con la soglia di fine slot
+  // (non con la quota fissa del backend), così cambia in base a quanti slot hai pianificato.
+  const usedPct = (lastData && lastData.status === 'ok') ? lastData.used_pct : null;
+  const overPace = usedPct !== null ? usedPct > targetSlot : null;
+  const thresholdEl = document.getElementById('threshold');
+  const thresholdRow = document.getElementById('threshold-row');
+  if (usedPct !== null) {
+    const diff = usedPct - targetSlot;
+    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(0) + '%';
+    thresholdEl.textContent = diffStr + ' ' + (overPace ? T.overLimit : T.underLimit);
+    thresholdRow.classList.toggle('over', overPace);
+    thresholdRow.classList.toggle('under', !overPace);
+  } else {
+    thresholdEl.textContent = '--';
+    thresholdRow.classList.remove('over', 'under');
+  }
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  // riga di intestazione: 7 giorni, dalla colonna 2 in poi (la colonna 1 è
+  // riservata all'asse delle icone, vedi sotto)
+  planDays.forEach((day, dayIdx) => {
+    const head = document.createElement('div');
+    head.className = 'daycol-head';
+    head.style.gridColumn = String(dayIdx + 2);
+    head.style.gridRow = '1';
+    head.innerHTML = '<div class="dow">' + T.dow[day.weekdayNum] + '</div><div class="date">' +
+      String(day.date.getDate()).padStart(2, '0') + '/' + String(day.date.getMonth() + 1).padStart(2, '0') + '</div>';
+    grid.appendChild(head);
+  });
+
+  // asse verticale: colonna 1 del grid, subgrid sulle righe delle fasce (righe 2..N+1)
+  // così eredita esattamente le stesse linee di riga del grid principale — nessun
+  // offset o altezza calcolati a mano. Ogni icona è posizionata sul *confine* tra le
+  // fasce (non al centro di una fascia): le prime SLOT_KEYS.length sull'inizio della
+  // propria riga (allineate al bordo superiore), l'ultima sulla fine dell'ultima riga.
+  const axis = document.createElement('div');
+  axis.className = 'axis-cell';
+  axis.style.gridColumn = '1';
+  axis.style.gridRow = '2 / span ' + SLOT_KEYS.length;
+  BOUNDARY_ICON_KEYS.forEach((key, i) => {
+    const icon = document.createElement('div');
+    icon.className = 'axis-icon';
+    icon.innerHTML = ICONS[key];
+    icon.style.gridColumn = '1'; // esplicito: l'ultima icona condivide la riga della penultima
+    // (entrambe ai due bordi dell'ultima fascia), senza questo l'auto-placement le
+    // metterebbe in colonne diverse pensando che si sovrappongano
+    if (i < SLOT_KEYS.length) {
+      icon.style.gridRow = String(i + 1);
+      icon.style.alignSelf = 'start';
+      icon.style.transform = 'translateY(-50%)';
+    } else {
+      icon.style.gridRow = String(SLOT_KEYS.length);
+      icon.style.alignSelf = 'end';
+      icon.style.transform = 'translateY(50%)';
+    }
+    axis.appendChild(icon);
+  });
+  grid.appendChild(axis);
+
+  for (let row = 0; row < SLOT_KEYS.length; row++) {
+    planDays.forEach((day, dayIdx) => {
+      const slot = day.slots[row];
+      const cell = document.createElement('div');
+      const workedKey = isoDateLocal(day.date) + ':' + slot.key;
+      const worked = !!(lastData && lastData.worked_slots && lastData.worked_slots[workedKey]);
+      cell.className = 'tile ' + (slot.active ? 'active' : 'inactive') + (worked ? ' worked' : '');
+      cell.style.gridColumn = String(dayIdx + 2);
+      cell.style.gridRow = String(row + 2);
+      const num = numbering.get(dayIdx + ':' + slot.key);
+      cell.textContent = slot.active ? String(num) : '–';
+      cell.title = (slot.active ? T.deactivate : T.activate);
+
+      cell.addEventListener('click', () => {
+        slot.active = !slot.active;
+        persistPlan(planDays);
+        renderPlan();
+      });
+
+      const isCurrent = currentTile && currentTile.dayIdx === dayIdx && currentTile.slotKey === slot.key;
+      if (isCurrent) {
+        cell.classList.add('current', overPace ? 'over' : 'under');
+        const marker = document.createElement('div');
+        marker.className = 'now-marker' + (overPace ? ' over' : '');
+        marker.style.left = (currentTile.fraction * 100) + '%';
+        cell.appendChild(marker);
+      }
+
+      grid.appendChild(cell);
+    });
+  }
+
+  // riga finale: quota della settimana rappresentata da ciascun giorno, calcolata
+  // sugli slot attivi di quel giorno (non sul tempo trascorso, a differenza di
+  // "soglia di fine giornata" che riguarda solo oggi).
+  const footerRow = SLOT_KEYS.length + 2;
+  planDays.forEach((day, dayIdx) => {
+    const activeCount = day.slots.filter(s => s.active).length;
+    const dayShare = activeCount * weight;
+    const foot = document.createElement('div');
+    foot.className = 'daycol-target';
+    foot.style.gridColumn = String(dayIdx + 2);
+    foot.style.gridRow = String(footerRow);
+    foot.textContent = dayShare.toFixed(0) + '%';
+    grid.appendChild(foot);
+  });
+}
+
+function refreshLoadSelect() {
+  const select = document.getElementById('load-plan');
+  const named = loadNamedPlans();
+  const names = Object.keys(named).sort();
+  select.innerHTML = '<option value="">' + T.loadPlanDefault + '</option>' +
+    names.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+}
+
+function setupPlanToolbar() {
+  document.getElementById('reset-plan').addEventListener('click', () => {
+    localStorage.removeItem(PLAN_KEY);
+    if (planDays) {
+      planDays.forEach(day => day.slots.forEach(slot => { slot.active = defaultActive(day.weekdayNum, slot.key); }));
+      persistPlan(planDays);
+    }
+    renderPlan();
+  });
+
+  document.getElementById('save-plan').addEventListener('click', () => {
+    const input = document.getElementById('plan-name');
+    const name = input.value.trim();
+    if (!name || !planDays) return;
+    const named = loadNamedPlans();
+    if (!Object.prototype.hasOwnProperty.call(named, name) && Object.keys(named).length >= MAX_SAVED_PLANS) {
+      alert(T.maxPlansReached);
+      return;
+    }
+    named[name] = planSnapshot(planDays);
+    saveNamedPlans(named);
+    refreshLoadSelect();
+    document.getElementById('load-plan').value = name;
+    input.value = '';
+  });
+
+  document.getElementById('load-plan').addEventListener('change', e => {
+    const name = e.target.value;
+    if (!name || !planDays) return;
+    const named = loadNamedPlans();
+    const snapshot = named[name];
+    if (!snapshot) return;
+    planDays.forEach(day => day.slots.forEach(slot => {
+      const key = day.weekdayNum + ':' + slot.key;
+      slot.active = Object.prototype.hasOwnProperty.call(snapshot, key) ? snapshot[key] : defaultActive(day.weekdayNum, slot.key);
+    }));
+    persistPlan(planDays);
+    renderPlan();
+  });
+
+  refreshLoadSelect();
+}
+
+// --- banner informativo su local storage (non cookie) ---
+const CONSENT_KEY = 'claude-monitor-consent-ack';
+function refreshConsentText() {
+  document.getElementById('consent-text').innerHTML = T.consentText;
+}
+function setupConsentBanner() {
+  refreshConsentText();
+  const banner = document.getElementById('consent-banner');
+  if (!localStorage.getItem(CONSENT_KEY)) {
+    banner.hidden = false;
+  }
+  document.getElementById('consent-ok').addEventListener('click', () => {
+    localStorage.setItem(CONSENT_KEY, '1');
+    banner.hidden = true;
+  });
+}
+
+// --- lingua IT/EN: pill con le due lingue cliccabili separatamente (stile orco.it) ---
+function updateLangSwitchUI() {
+  document.getElementById('lang-opt-it').classList.toggle('active', LOCALE === 'it');
+  document.getElementById('lang-opt-en').classList.toggle('active', LOCALE === 'en');
+}
+function setLocale(lang) {
+  LOCALE = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  T = STRINGS[LOCALE];
+  applyStrings();
+  refreshLoadSelect();
+  renderTzOptions();
+  refreshFormatUI();
+  refreshConsentText();
+  updateLangSwitchUI();
+  if (lastData) render(lastData);
+}
+function setupLangSwitch() {
+  document.getElementById('lang-opt-it').addEventListener('click', () => setLocale('it'));
+  document.getElementById('lang-opt-en').addEventListener('click', () => setLocale('en'));
+  updateLangSwitchUI();
+}
+
+// --- tema chiaro/scuro ---
+function systemPrefersDark() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function effectiveTheme() {
+  return localStorage.getItem(THEME_KEY) || (systemPrefersDark() ? 'dark' : 'light');
+}
+function applyTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored) {
+    document.documentElement.setAttribute('data-theme', stored);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  const knob = document.getElementById('theme-knob');
+  knob.style.transform = effectiveTheme() === 'dark' ? 'translateX(24px)' : 'translateX(0)';
+}
+function setupThemeSwitch() {
+  document.getElementById('theme-switch').addEventListener('click', () => {
+    localStorage.setItem(THEME_KEY, effectiveTheme() === 'dark' ? 'light' : 'dark');
+    applyTheme();
+  });
+  applyTheme();
+}
+
+// --- fuso orario e formato ora ---
+function getTz() { return localStorage.getItem(TZ_KEY) || 'local'; }
+function getHour12() { return localStorage.getItem(HOUR12_KEY) === '1'; }
+
+function formatDateTime(date) {
+  const opts = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: getHour12() };
+  const tz = getTz();
+  if (tz !== 'local') opts.timeZone = tz;
+  return date.toLocaleString(T.localeCode, opts);
+}
+function formatTime(date) {
+  const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: getHour12() };
+  const tz = getTz();
+  if (tz !== 'local') opts.timeZone = tz;
+  return date.toLocaleTimeString(T.localeCode, opts);
+}
+function formatDuration(ms) {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) return hours + T.hourUnit + ' ' + minutes + T.minuteUnit;
+  return minutes + T.minuteUnit;
+}
+
+function updateTimeDisplays() {
+  if (!lastData || lastData.status !== 'ok') {
+    setStreamBanner(false);
+    return;
+  }
+  const now = Date.now();
+
+  const weekResetDate = parseResetDate(lastData.reset_date);
+  const daysLeft = Math.max(0, Math.ceil((weekResetDate.getTime() - now) / 86400000));
+  document.getElementById('week-reset').textContent = formatDateTime(weekResetDate) +
+    ' (' + T.inPrefix + daysLeft + T.dayUnit + ')';
+
+  if (lastData.five_hour_reset_date) {
+    const sessionResetDate = parseResetDate(lastData.five_hour_reset_date);
+    const hoursLeft = Math.max(0, Math.ceil((sessionResetDate.getTime() - now) / 3600000));
+    document.getElementById('hour-reset').textContent = formatDateTime(sessionResetDate) +
+      ' (' + T.inPrefix + hoursLeft + T.hourUnit + ')';
+  } else {
+    document.getElementById('hour-reset').textContent = '--';
+  }
+
+  const updatedAtDate = new Date(lastData.updated_at * 1000);
+  const staleMs = now - updatedAtDate.getTime();
+  const isStale = staleMs > STALE_THRESHOLD_MS;
+  setUpdatedMessage(
+    (isStale ? T.staleDataPrefix + formatDuration(staleMs) + ' — ' : T.updatedPrefix) + formatTime(updatedAtDate),
+    isStale
+  );
+  setStreamBanner(!isStale);
+}
+
+function renderTzOptions() {
+  const select = document.getElementById('tz-select');
+  const current = select.value || getTz();
+  select.innerHTML = TIMEZONES.map(tz =>
+    '<option value="' + tz + '">' + (tz === 'local' ? T.localTz : tz) + '</option>'
+  ).join('');
+  select.value = current;
+}
+
+function refreshFormatUI() {
+  const isAmpm = getHour12();
+  document.getElementById('format-knob').style.transform = isAmpm ? 'translateX(24px)' : 'translateX(0)';
+  document.getElementById('fmt-label-24h').classList.toggle('active', !isAmpm);
+  document.getElementById('fmt-label-ampm').classList.toggle('active', isAmpm);
+}
+
+function setupTzControls() {
+  renderTzOptions();
+  const select = document.getElementById('tz-select');
+  select.addEventListener('change', () => {
+    localStorage.setItem(TZ_KEY, select.value);
+    updateTimeDisplays();
+  });
+
+  refreshFormatUI();
+  document.getElementById('format-toggle').addEventListener('click', () => {
+    localStorage.setItem(HOUR12_KEY, getHour12() ? '0' : '1');
+    refreshFormatUI();
+    updateTimeDisplays();
+  });
+}
+
+function setUpdatedMessage(text, isError) {
+  const updated = document.getElementById('updated');
+  updated.textContent = text;
+  updated.classList.toggle('error', !!isError);
+}
+
+function render(data) {
+  if (!data || data.status !== 'ok') {
+    document.getElementById('week-pct').textContent = '--%';
+    document.getElementById('hour-pct').textContent = '--%';
+    setUpdatedMessage(data && data.status === 'n/d' ? T.noApiResponse : T.waitingData, data && data.status === 'n/d');
+    setStreamBanner(false);
+    return;
+  }
+  lastData = data;
+
+  document.getElementById('hour-pct').textContent = (data.five_hour_pct !== null && data.five_hour_pct !== undefined)
+    ? data.five_hour_pct.toFixed(0) + '%' : '--%';
+  document.getElementById('hour-bar-fill').style.width = (data.five_hour_pct || 0) + '%';
+  document.getElementById('week-pct').textContent = data.used_pct.toFixed(0) + '%';
+  document.getElementById('week-bar-fill').style.width = data.used_pct + '%';
+
+  updateTimeDisplays();
+
+  if (!planDays && data.reset_date) {
+    const resetsAt = parseResetDate(data.reset_date);
+    const dates = computeSevenDays(resetsAt);
+    planDays = buildDayModel(dates, loadPlan());
+  }
+  renderPlan();
+}
+
+// metti a true dalla console del browser (window.DEBUG_PAUSE_REFRESH = true) per
+// bloccare i refresh automatici e lavorare sui devtools senza che il DOM del
+// calendario venga ricostruito sotto di te ogni pochi secondi
+window.DEBUG_PAUSE_REFRESH = false;
+
+async function poll() {
+  if (window.DEBUG_PAUSE_REFRESH) return;
+  try {
+    const res = await fetch('data/state.json?_=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      render(await res.json());
+    } else {
+      setUpdatedMessage(T.stateNotFound, true);
+      setStreamBanner(false);
+    }
+  } catch (e) {
+    setUpdatedMessage(T.stateNotFound, true);
+    setStreamBanner(false);
+  }
+}
+
+applyStrings();
+setupPlanToolbar();
+setupThemeSwitch();
+setupTzControls();
+setupConsentBanner();
+setupLangSwitch();
+poll();
+setInterval(poll, POLL_MS);
+setInterval(() => { if (!window.DEBUG_PAUSE_REFRESH) renderPlan(); }, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
