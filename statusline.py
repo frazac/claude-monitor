@@ -3,6 +3,7 @@ import datetime
 import glob
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -10,8 +11,10 @@ SEGMENTS = 6  # 5 giorni lavorativi standard + 1 extra, domenica esclusa
 DAILY_QUOTA_PCT = 100 / SEGMENTS  # quota fissa di budget settimanale per giorno (~17%)
 WEEKDAY_LETTERS = ["L", "M", "M", "G", "V", "S", "D"]  # date.weekday(): 0=lunedì ... 6=domenica
 
-WEB_STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "state.json")
-WORKED_CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "worked_cache.json")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+WEB_STATE_FILE = os.path.join(SCRIPT_DIR, "data", "state.json")
+WORKED_CACHE_FILE = os.path.join(SCRIPT_DIR, "data", "worked_cache.json")
+DISPLAY_CONFIG_FILE = os.path.join(SCRIPT_DIR, "data", "display-config.json")
 CLAUDE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
 WORK_THRESHOLD_MINUTES = 15  # minuti distinti di attività per considerare uno slot "lavorato"
 WORKED_CACHE_TTL = 60  # secondi: non ri-scansionare i log più spesso di così
@@ -203,9 +206,39 @@ def write_web_state(payload):
         pass  # il dashboard web è un extra, non deve mai rompere la statusline
 
 
+def load_display_config():
+    try:
+        with open(DISPLAY_CONFIG_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {"mode": "bar", "original_command": None}
+
+
+def emit_terminal_output(default_text, raw_stdin):
+    """Stampa la riga per il terminale: la barra di claude-monitor, oppure — se l'utente ha
+    scelto di preservare il proprio statusLine precedente (vedi install-statusline.py) — l'output
+    di quel comando originale, invariato. In entrambi i casi data/state.json è già stato scritto
+    da write_web_state() prima di questa chiamata, quindi il dashboard riceve sempre i dati
+    indipendentemente da cosa viene mostrato nel terminale."""
+    config = load_display_config()
+    if config.get("mode") == "passthrough" and config.get("original_command"):
+        try:
+            result = subprocess.run(
+                config["original_command"], shell=True, input=raw_stdin,
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                sys.stdout.write(result.stdout)
+                return
+        except Exception:
+            pass  # comando originale non eseguibile/fallito: ripiega sulla barra qui sotto
+    print(default_text)
+
+
 def main():
     try:
-        data = json.load(sys.stdin)
+        raw_input = sys.stdin.read()
+        data = json.loads(raw_input)
     except Exception:
         print("claude-monitor: no input")
         return
@@ -218,15 +251,14 @@ def main():
     five_hour_resets_at = five_hour.get("resets_at")
 
     if not seven_day:
-        print(f"[{model}] limite settimanale: n/d")
         write_web_state({"status": "n/d", "model": model, "updated_at": time.time()})
+        emit_terminal_output(f"[{model}] limite settimanale: n/d", raw_input)
         return
 
     used_pct = seven_day.get("used_percentage", 0)
     resets_at = seven_day.get("resets_at")
 
     if not resets_at:
-        print(f"[{model}] {used_pct:.0f}% (7gg)")
         write_web_state({
             "status": "no_reset_info",
             "model": model,
@@ -235,6 +267,7 @@ def main():
             "five_hour_resets_at": five_hour_resets_at,
             "updated_at": time.time(),
         })
+        emit_terminal_output(f"[{model}] {used_pct:.0f}% (7gg)", raw_input)
         return
 
     window_start = resets_at - 7 * 86400
@@ -277,7 +310,7 @@ def main():
 
     worked_slots = compute_worked_slots(window_start, resets_at)
 
-    print(
+    bar_text = (
         f"{CYAN}[{model}]{RESET} {bar} "
         f"{color}{used_pct:.0f}%{RESET} "
         f"({tacca_str}, quota {DAILY_QUOTA_PCT:.0f}%/g, reset {reset_date_str}){pace_msg}{five_hour_line}"
@@ -297,6 +330,8 @@ def main():
         "worked_slots": worked_slots,
         "updated_at": time.time(),
     })
+
+    emit_terminal_output(bar_text, raw_input)
 
 
 if __name__ == "__main__":
