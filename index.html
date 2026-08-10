@@ -353,25 +353,42 @@ function renderPlan() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
 
-  // riga di intestazione: 7 giorni (le colonne ora sono allineate a legenda e resto
-  // del layout: l'asse delle icone non occupa più una colonna, sporge a sinistra)
+  // riga di intestazione: 7 giorni, dalla colonna 2 in poi (la colonna 1 è
+  // riservata all'asse delle icone, vedi sotto)
   planDays.forEach((day, dayIdx) => {
     const head = document.createElement('div');
     head.className = 'daycol-head';
-    head.style.gridColumn = String(dayIdx + 1);
+    head.style.gridColumn = String(dayIdx + 2);
     head.style.gridRow = '1';
     head.innerHTML = '<div class="dow">' + T.dow[day.weekdayNum] + '</div><div class="date">' +
       String(day.date.getDate()).padStart(2, '0') + '/' + String(day.date.getMonth() + 1).padStart(2, '0') + '</div>';
     grid.appendChild(head);
   });
 
-  // asse verticale: posizionato in assoluto fuori dalla griglia (vedi CSS .axis-cell),
-  // con le icone ai *confini* tra gli slot (inizio, tra 1-2, tra 2-3, fine) e non
-  // centrate sugli slot stessi. Altezza calcolata sul numero di fasce (SLOT_KEYS).
+  // asse verticale: colonna 1 del grid, subgrid sulle righe delle fasce (righe 2..N+1)
+  // così eredita esattamente le stesse linee di riga del grid principale — nessun
+  // offset o altezza calcolati a mano. Ogni icona è posizionata sul *confine* tra le
+  // fasce (non al centro di una fascia): le prime SLOT_KEYS.length sull'inizio della
+  // propria riga (allineate al bordo superiore), l'ultima sulla fine dell'ultima riga.
   const axis = document.createElement('div');
   axis.className = 'axis-cell';
-  axis.style.height = (SLOT_KEYS.length * 46 + (SLOT_KEYS.length - 1) * 4) + 'px';
-  axis.innerHTML = BOUNDARY_ICON_KEYS.map(k => ICONS[k]).join('');
+  axis.style.gridColumn = '1';
+  axis.style.gridRow = '2 / span ' + SLOT_KEYS.length;
+  BOUNDARY_ICON_KEYS.forEach((key, i) => {
+    const icon = document.createElement('div');
+    icon.className = 'axis-icon';
+    icon.innerHTML = ICONS[key];
+    if (i < SLOT_KEYS.length) {
+      icon.style.gridRow = String(i + 1);
+      icon.style.alignSelf = 'start';
+      icon.style.transform = 'translateY(-50%)';
+    } else {
+      icon.style.gridRow = String(SLOT_KEYS.length);
+      icon.style.alignSelf = 'end';
+      icon.style.transform = 'translateY(50%)';
+    }
+    axis.appendChild(icon);
+  });
   grid.appendChild(axis);
 
   for (let row = 0; row < SLOT_KEYS.length; row++) {
@@ -381,7 +398,7 @@ function renderPlan() {
       const workedKey = isoDateLocal(day.date) + ':' + slot.key;
       const worked = !!(lastData && lastData.worked_slots && lastData.worked_slots[workedKey]);
       cell.className = 'tile ' + (slot.active ? 'active' : 'inactive') + (worked ? ' worked' : '');
-      cell.style.gridColumn = String(dayIdx + 1);
+      cell.style.gridColumn = String(dayIdx + 2);
       cell.style.gridRow = String(row + 2);
       const num = numbering.get(dayIdx + ':' + slot.key);
       cell.textContent = slot.active ? String(num) : '–';
@@ -415,7 +432,7 @@ function renderPlan() {
     const dayShare = activeCount * weight;
     const foot = document.createElement('div');
     foot.className = 'daycol-target';
-    foot.style.gridColumn = String(dayIdx + 1);
+    foot.style.gridColumn = String(dayIdx + 2);
     foot.style.gridRow = String(footerRow);
     foot.textContent = dayShare.toFixed(0) + '%';
     grid.appendChild(foot);
