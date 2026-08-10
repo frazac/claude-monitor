@@ -1,6 +1,6 @@
 # Claude Monitor Limes
 
-*[Leggi questo file in italiano](README.it.md)*
+*[Italian version] [Leggi questo testo in lingua italiana.](README.it.md)*
 
 A small local dashboard that tracks your Claude Code usage against Anthropic's weekly
 and 5-hour rate limits, and lets you plan your work slots around them.
@@ -28,9 +28,18 @@ as soon as fresh data comes in.
 
 1. **Wire up the data source.** Run `python3 install-statusline.py` from this folder.
    It edits your `~/.claude/settings.json` so Claude Code's `statusLine` hook points
-   at `statusline.py`. It backs up your previous settings file first, and asks for
-   confirmation before replacing an existing `statusLine` command, so it's safe to run
-   even if you already had one configured.
+   at `statusline.py` — that's the only way to receive usage data (see "How it works"
+   above), so this step is mandatory. It backs up your previous settings file first,
+   and asks for confirmation before replacing an existing `statusLine` command, so
+   it's safe to run even if you already had one configured.
+
+   It will then ask a **separate** question: what should your terminal show? By
+   default (just press Enter) it keeps showing exactly what it showed before —
+   `statusline.py` runs your previous command behind the scenes and prints its output
+   unchanged, while still writing `data/state.json` for the dashboard. Answer `2` if
+   you'd rather see claude-monitor's usage bar in the terminal instead. This choice is
+   saved in `data/display-config.json` and can be changed any time by re-running the
+   script.
 2. **Open the dashboard in a browser.** `index.html` is a static file, but browsers
    block it from loading `data/state.json` correctly when opened directly (`file://`),
    so it needs to be served over HTTP. Two ways to do that:

@@ -1,6 +1,6 @@
 # Claude Monitor Limes
 
-*[Read this file in English](README.md)*
+*[English version] [Read this text in English.](README.md)*
 
 Una piccola dashboard locale che mostra l'uso di Claude Code rispetto ai limiti
 settimanali e alle 5 ore di Anthropic, e ti permette di pianificare i tuoi slot di
@@ -30,10 +30,19 @@ sistemarlo; diventa verde ("Stream collegato") appena arrivano dati freschi.
 
 1. **Collega la fonte dei dati.** Lancia `python3 install-statusline.py` da questa
    cartella. Modifica il tuo `~/.claude/settings.json` in modo che l'hook `statusLine`
-   di Claude Code punti a `statusline.py`. Fa prima un backup del tuo file di
-   configurazione esistente, e chiede conferma prima di sostituire un comando
-   `statusLine` già presente — è sicuro da lanciare anche se ne avevi già uno
-   configurato.
+   di Claude Code punti a `statusline.py` — è l'unico modo per ricevere i dati di
+   utilizzo (vedi "Come funziona" sopra), quindi questo passo è obbligatorio. Fa prima
+   un backup del tuo file di configurazione esistente, e chiede conferma prima di
+   sostituire un comando `statusLine` già presente — è sicuro da lanciare anche se ne
+   avevi già uno configurato.
+
+   Dopodiché farà una domanda **separata**: cosa deve mostrare il tuo terminale? Di
+   default (basta premere Invio) continua a mostrare esattamente quello che mostrava
+   prima — `statusline.py` richiama il tuo comando precedente dietro le quinte e ne
+   stampa l'output invariato, scrivendo comunque `data/state.json` per la dashboard.
+   Rispondi `2` se preferisci vedere invece la barra di utilizzo di claude-monitor nel
+   terminale. Questa scelta viene salvata in `data/display-config.json` e può essere
+   cambiata in qualsiasi momento rilanciando lo script.
 2. **Apri la dashboard nel browser.** `index.html` è un file statico, ma i browser
    bloccano il caricamento corretto di `data/state.json` se lo apri direttamente
    (`file://`), quindi va servito via HTTP. Due modi per farlo:
