@@ -677,7 +677,13 @@ function render(data) {
   renderPlan();
 }
 
+// metti a true dalla console del browser (window.DEBUG_PAUSE_REFRESH = true) per
+// bloccare i refresh automatici e lavorare sui devtools senza che il DOM del
+// calendario venga ricostruito sotto di te ogni pochi secondi
+window.DEBUG_PAUSE_REFRESH = false;
+
 async function poll() {
+  if (window.DEBUG_PAUSE_REFRESH) return;
   try {
     const res = await fetch('data/state.json?_=' + Date.now(), { cache: 'no-store' });
     if (res.ok) {
@@ -700,7 +706,7 @@ setupConsentBanner();
 setupLangSwitch();
 poll();
 setInterval(poll, POLL_MS);
-setInterval(renderPlan, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
+setInterval(() => { if (!window.DEBUG_PAUSE_REFRESH) renderPlan(); }, 30000); // aggiorna la posizione dell'asticella anche senza nuovi dati
 </script>
 </body>
 </html>
