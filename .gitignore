@@ -5,6 +5,7 @@ prototipi/
 # dati generati a runtime dalla statusline (specifici della macchina/utente)
 data/state.json
 data/worked_cache.json
+data/display-config.json
 
 # python
 __pycache__/
