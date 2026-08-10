@@ -1,13 +1,20 @@
+/* --muted è sempre uguale a --fg: tutto il testo usa lo stesso colore, tranne
+   --over/--under (i soli casi in cui il colore comunica qualcosa, sopra/sotto
+   soglia). Non un grigio indipendente: se cambia --fg, --muted lo segue.
+   --tile-fill (sfondo di tutto ciò che è "selezionato": slot attivi del piano,
+   swatch "Plan" della legenda) è derivato da --under allo stesso modo, sempre
+   la stessa tonalità verde-acqua ultra chiara con lo stesso rapporto di
+   trasparenza (18%), non un grigio/bianco scelto a parte. */
 :root {
-  --bg: #fff; --fg: #000; --muted: #666;
-  --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08);
-  --over: #c81450; --under: #2e8b7b;
+  --bg: #fff; --fg: #000; --muted: var(--fg);
+  --border: rgba(0,0,0,0.15); --over: #c81450; --under: #2e8b7b;
+  --tile-fill: color-mix(in srgb, var(--under) 18%, transparent);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
+  :root { --bg: #000; --fg: #fff; --muted: var(--fg); --border: rgba(255,255,255,0.15); --over: #ff4d78; --under: #4fd7c0; --tile-fill: color-mix(in srgb, var(--under) 18%, transparent); }
 }
-:root[data-theme="dark"] { --bg: #000; --fg: #fff; --muted: #999; --border: rgba(255,255,255,0.15); --tile-fill: rgba(255,255,255,0.12); --over: #ff4d78; --under: #4fd7c0; }
-:root[data-theme="light"] { --bg: #fff; --fg: #000; --muted: #666; --border: rgba(0,0,0,0.15); --tile-fill: rgba(0,0,0,0.08); --over: #c81450; --under: #2e8b7b; }
+:root[data-theme="dark"] { --bg: #000; --fg: #fff; --muted: var(--fg); --border: rgba(255,255,255,0.15); --over: #ff4d78; --under: #4fd7c0; --tile-fill: color-mix(in srgb, var(--under) 18%, transparent); }
+:root[data-theme="light"] { --bg: #fff; --fg: #000; --muted: var(--fg); --border: rgba(0,0,0,0.15); --over: #c81450; --under: #2e8b7b; --tile-fill: color-mix(in srgb, var(--under) 18%, transparent); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
