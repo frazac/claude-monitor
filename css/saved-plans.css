@@ -1,0 +1,10 @@
+.plan-row { cursor: pointer; }
+.plan-row:hover td { color: var(--under); }
+.badge {
+  display: inline-block; font-size: 0.65rem; padding: 1px 6px; margin-left: 4px;
+  border: 1px solid var(--under); border-radius: 999px; color: var(--under);
+}
+.plan-detail-row td { border-bottom: 1px solid var(--border); padding: 8px 8px 12px 0; }
+.detail-days { display: flex; flex-direction: column; gap: 2px; background: var(--tile-fill); border-radius: 6px; padding: 8px 10px; }
+.detail-day { display: flex; justify-content: space-between; gap: 12px; font-size: 0.75rem; }
+.detail-dow { color: var(--muted); min-width: 3em; }

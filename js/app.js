@@ -97,7 +97,7 @@ const POLL_MS = 5000;
 const STALE_THRESHOLD_MS = 20 * 60 * 1000; // dati più vecchi di 20 min: statusline.py scrive solo con una sessione Claude Code interattiva attiva
 const PLAN_KEY = 'claude-monitor-plan';
 const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
-const MAX_SAVED_PLANS = 10;
+const MAX_SAVED_PLANS = 112; // come le settimane dell'anno
 const THEME_KEY = 'claude-monitor-theme';
 const TZ_KEY = 'claude-monitor-tz';
 const HOUR12_KEY = 'claude-monitor-hour12';
@@ -140,6 +140,7 @@ function applyStrings() {
   document.getElementById('icon-globe').innerHTML = ICONS.globe;
   document.getElementById('lbl-privacy-link2').textContent = T.privacyLink;
   document.getElementById('lbl-storage-link2').textContent = T.storageLink;
+  document.getElementById('lbl-saved-plans-link').textContent = T.savedPlansLink;
   document.getElementById('lbl-icons-credit').innerHTML = T.iconsCreditPrefix +
     '<a href="https://iconoir.com/" target="_blank" rel="noopener">iconoir.com</a> &amp; ' +
     '<a href="https://lucide.dev/" target="_blank" rel="noopener">lucide.dev</a>';
@@ -212,6 +213,28 @@ function loadNamedPlans() {
 
 function saveNamedPlans(named) {
   localStorage.setItem(NAMED_PLANS_KEY, JSON.stringify(named));
+}
+
+// i piani nominati salvati prima dell'introduzione di savedAt sono ancora lo
+// snapshot "nudo" ({"weekday:slotKey": bool}); quelli nuovi sono avvolti in
+// {snapshot, savedAt}. Questi due accessor normalizzano entrambi i formati,
+// così il resto del codice (qui e in saved-plans.js) non deve distinguerli.
+function planEntrySnapshot(entry) {
+  return entry && typeof entry === 'object' && entry.snapshot ? entry.snapshot : entry;
+}
+function planEntrySavedAt(entry) {
+  return entry && typeof entry === 'object' && entry.savedAt ? entry.savedAt : null;
+}
+function lastSavedPlanName(named) {
+  let best = null;
+  let bestTime = -Infinity;
+  Object.keys(named).forEach(name => {
+    const savedAt = planEntrySavedAt(named[name]);
+    if (!savedAt) return;
+    const t = new Date(savedAt).getTime();
+    if (t > bestTime) { bestTime = t; best = name; }
+  });
+  return best;
 }
 
 // le chiavi di piano usano il numero del giorno (0-6, come Date.getDay()) e non
@@ -421,6 +444,11 @@ function refreshLoadSelect() {
   const names = Object.keys(named).sort();
   select.innerHTML = '<option value="">' + T.loadPlanDefault + '</option>' +
     names.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+  // all'apertura, mostra subito quale piano è stato salvato per ultimo (senza
+  // applicarlo al piano corrente: è solo un'indicazione, il piano a schermo
+  // resta quello che era già attivo, letto da PLAN_KEY come sempre)
+  const last = lastSavedPlanName(named);
+  if (last) select.value = last;
 }
 
 function setupPlanToolbar() {
@@ -442,7 +470,7 @@ function setupPlanToolbar() {
       alert(T.maxPlansReached);
       return;
     }
-    named[name] = planSnapshot(planDays);
+    named[name] = { snapshot: planSnapshot(planDays), savedAt: new Date().toISOString() };
     saveNamedPlans(named);
     refreshLoadSelect();
     document.getElementById('load-plan').value = name;
@@ -453,7 +481,7 @@ function setupPlanToolbar() {
     const name = e.target.value;
     if (!name || !planDays) return;
     const named = loadNamedPlans();
-    const snapshot = named[name];
+    const snapshot = planEntrySnapshot(named[name]);
     if (!snapshot) return;
     planDays.forEach(day => day.slots.forEach(slot => {
       const key = day.weekdayNum + ':' + slot.key;
