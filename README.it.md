@@ -28,6 +28,12 @@ sistemarlo; diventa verde ("Stream collegato") appena arrivano dati freschi.
 
 ## Setup
 
+**Avvio rapido:** lancia `python3 wizard.py` da questa cartella. È un wrapper bilingue
+(IT/EN) attorno ai tre passi qui sotto — li esegue in ordine, spiega ciascuno prima di
+partire, e alla fine può avviare da solo il server locale e aprire la dashboard. Niente
+viene saltato o nascosto: continua a leggere per cosa fa davvero ogni passo, o per
+eseguirli a mano.
+
 1. **Collega la fonte dei dati.** Lancia `python3 install-statusline.py` da questa
    cartella. Modifica il tuo `~/.claude/settings.json` in modo che l'hook `statusLine`
    di Claude Code punti a `statusline.py` — è l'unico modo per ricevere i dati di

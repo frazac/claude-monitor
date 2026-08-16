@@ -26,6 +26,12 @@ as soon as fresh data comes in.
 
 ## Setup
 
+**Quick start:** run `python3 wizard.py` from this folder. It's a bilingual (IT/EN)
+wrapper around the three steps below — it runs them in order, explains each one before
+it starts, and can start the local server and open the dashboard for you at the end.
+Nothing is skipped or hidden: read on for what each step actually does, or to run them
+by hand instead.
+
 1. **Wire up the data source.** Run `python3 install-statusline.py` from this folder.
    It edits your `~/.claude/settings.json` so Claude Code's `statusLine` hook points
    at `statusline.py` — that's the only way to receive usage data (see "How it works"
