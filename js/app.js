@@ -438,12 +438,16 @@ function renderPlan() {
   });
 }
 
+function escapeHTML(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function refreshLoadSelect() {
   const select = document.getElementById('load-plan');
   const named = loadNamedPlans();
   const names = Object.keys(named).sort();
   select.innerHTML = '<option value="">' + T.loadPlanDefault + '</option>' +
-    names.map(n => '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>').join('');
+    names.map(n => '<option value="' + escapeHTML(n) + '">' + escapeHTML(n) + '</option>').join('');
   // all'apertura, mostra subito quale piano è stato salvato per ultimo (senza
   // applicarlo al piano corrente: è solo un'indicazione, il piano a schermo
   // resta quello che era già attivo, letto da PLAN_KEY come sempre)

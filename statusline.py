@@ -240,6 +240,38 @@ def build_bar(used_pct, current_index):
     return "".join(chars)
 
 
+DEBUG_LOG_FILE = os.path.join(SCRIPT_DIR, "data", "debug-writes.log")
+DEBUG_LOG_MAX_LINES = 200
+
+
+def log_write_source(data):
+    """Traccia ogni invocazione (sessione/cwd/pid + i percentuali ricevuti) in un log
+    locale a rotazione, per poter diagnosticare le percentuali che oscillano: se più
+    sessioni Claude Code aperte contemporaneamente scrivono tutte su data/state.json
+    (che è un unico file globale, non per-sessione), questo log rende visibile quale
+    sessione ha scritto cosa e quando, invece di dover indovinare alla cieca."""
+    try:
+        rate_limits = data.get("rate_limits") or {}
+        entry = {
+            "ts": time.time(),
+            "pid": os.getpid(),
+            "session_id": data.get("session_id"),
+            "cwd": data.get("cwd"),
+            "seven_day_pct": (rate_limits.get("seven_day") or {}).get("used_percentage"),
+            "five_hour_pct": (rate_limits.get("five_hour") or {}).get("used_percentage"),
+        }
+        os.makedirs(os.path.dirname(DEBUG_LOG_FILE), exist_ok=True)
+        lines = []
+        if os.path.isfile(DEBUG_LOG_FILE):
+            with open(DEBUG_LOG_FILE) as f:
+                lines = f.readlines()[-(DEBUG_LOG_MAX_LINES - 1):]
+        lines.append(json.dumps(entry) + "\n")
+        with open(DEBUG_LOG_FILE, "w") as f:
+            f.writelines(lines)
+    except Exception:
+        pass  # diagnostica best-effort, non deve mai rompere la statusline
+
+
 def write_web_state(payload):
     try:
         os.makedirs(os.path.dirname(WEB_STATE_FILE), exist_ok=True)
@@ -285,6 +317,8 @@ def main():
     except Exception:
         print("claude-monitor: no input")
         return
+
+    log_write_source(data)
 
     model = data.get("model", {}).get("display_name", "?")
     rate_limits = data.get("rate_limits") or {}

@@ -49,10 +49,13 @@ as soon as fresh data comes in.
    - **You don't have one set up**: Python already includes a minimal one. From this
      folder, run:
      ```
-     python3 -m http.server 8931
+     python3 -m http.server 8931 --bind 127.0.0.1
      ```
      then open `http://localhost:8931/` in your browser. Leave that terminal running
      for as long as you want to use the dashboard; press `Ctrl+C` there to stop it.
+     `--bind 127.0.0.1` matters: without it, Python's server listens on every network
+     interface, so anyone else on the same Wi-Fi/LAN could open the dashboard (and your
+     usage data) too.
 3. **Keep a Claude Code session open.** The dashboard only shows live numbers while
    at least one interactive Claude Code terminal is open — see "How it works" above.
    It refreshes on its own every 15 seconds while idle, and immediately after every

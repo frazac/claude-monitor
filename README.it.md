@@ -52,11 +52,14 @@ sistemarlo; diventa verde ("Stream collegato") appena arrivano dati freschi.
    - **Non ne hai uno configurato**: Python ne include già uno minimale. Da questa
      cartella lancia:
      ```
-     python3 -m http.server 8931
+     python3 -m http.server 8931 --bind 127.0.0.1
      ```
      poi apri `http://localhost:8931/` nel browser. Lascia quel terminale aperto per
      tutto il tempo in cui vuoi usare la dashboard; premi `Ctrl+C` in quella finestra
      per fermarlo.
+     `--bind 127.0.0.1` è importante: senza, il server di Python resta in ascolto su
+     tutte le interfacce di rete, quindi chiunque altro sulla stessa Wi-Fi/LAN potrebbe
+     aprire la dashboard (e i tuoi dati di utilizzo).
 3. **Tieni aperta una sessione Claude Code.** La dashboard mostra numeri live solo
    mentre almeno un terminale Claude Code interattivo è aperto — vedi "Come funziona"
    sopra. Si aggiorna da sola ogni 15 secondi mentre è inattiva, e subito dopo ogni

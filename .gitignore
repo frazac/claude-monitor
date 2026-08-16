@@ -7,6 +7,7 @@ data/state.json
 data/worked_cache.json
 data/display-config.json
 data/slot-config.json
+data/debug-writes.log
 
 # python
 __pycache__/
