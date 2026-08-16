@@ -281,6 +281,43 @@ def write_web_state(payload):
         pass  # il dashboard web è un extra, non deve mai rompere la statusline
 
 
+def load_web_state():
+    try:
+        with open(WEB_STATE_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def clamp_non_decreasing(used_pct, five_hour_pct, reset_date_str, five_hour_reset_str):
+    """Più sessioni Claude Code aperte in parallelo scrivono tutte sullo stesso
+    data/state.json globale (nessun modo per avere uno stato per-sessione, vedi
+    todolist), e ciascuna riceve dall'API un proprio snapshot di rate_limits che può
+    differire leggermente da quello delle altre sessioni allo stesso istante — "l'ultima
+    che scrive vince" produceva un bounce visibile (es. 94% poi 71% poi 94% in pochi
+    secondi). Finché la finestra di reset non cambia, l'uso reale non può calare: se il
+    valore appena ricevuto è più basso di quello già scritto per la STESSA finestra,
+    teniamo il valore più alto invece di sovrascrivere verso il basso."""
+    prev = load_web_state()
+    if not prev or prev.get("status") != "ok":
+        return used_pct, five_hour_pct
+    if (
+        used_pct is not None
+        and prev.get("used_pct") is not None
+        and prev.get("reset_date") == reset_date_str
+        and used_pct < prev["used_pct"]
+    ):
+        used_pct = prev["used_pct"]
+    if (
+        five_hour_pct is not None
+        and prev.get("five_hour_pct") is not None
+        and prev.get("five_hour_reset_date") == five_hour_reset_str
+        and five_hour_pct < prev["five_hour_pct"]
+    ):
+        five_hour_pct = prev["five_hour_pct"]
+    return used_pct, five_hour_pct
+
+
 def load_display_config():
     try:
         with open(DISPLAY_CONFIG_FILE) as f:
@@ -359,6 +396,12 @@ def main():
 
     day_labels = [WEEKDAY_LETTERS[d.weekday()] for d in days]
 
+    reset_date_str = time.strftime("%d/%m/%Y %H:%M", time.localtime(resets_at))
+    five_hour_reset_str = (
+        time.strftime("%d/%m/%Y %H:%M", time.localtime(five_hour_resets_at)) if five_hour_resets_at else None
+    )
+    used_pct, five_hour_pct = clamp_non_decreasing(used_pct, five_hour_pct, reset_date_str, five_hour_reset_str)
+
     bar = build_bar(used_pct, current_index)
 
     target_pct = (current_index or 0) * DAILY_QUOTA_PCT
@@ -373,10 +416,6 @@ def main():
     now = datetime.datetime.now()
     day_fraction = (now.hour * 3600 + now.minute * 60 + now.second) / 86400
 
-    reset_date_str = time.strftime("%d/%m/%Y %H:%M", time.localtime(resets_at))
-    five_hour_reset_str = (
-        time.strftime("%d/%m/%Y %H:%M", time.localtime(five_hour_resets_at)) if five_hour_resets_at else None
-    )
     five_hour_line = (
         f" · 5h {five_hour_pct:.0f}% (reset {five_hour_reset_str})"
         if five_hour_pct is not None and five_hour_reset_str
