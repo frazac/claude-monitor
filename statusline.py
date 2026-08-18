@@ -22,24 +22,29 @@ WORKED_CACHE_TTL = 60  # secondi: non ri-scansionare i log più spesso di così
 
 
 def load_slot_config():
-    """Se data/slot-config.json esiste (creato da configure-slots.py), genera N fasce
-    di uguale durata tra day_start e day_end, con chiavi numeriche "0".."N-1" — stessa
-    identica logica di buildSlotsFromConfig() in js/app.js, le due DEVONO restare in
-    sincronia: entrambe leggono lo stesso file, quindi condividono sempre la stessa
-    definizione di fascia, altrimenti il marcatore "log data" del calendario web non
-    corrisponderebbe più agli slot letti da qui. In assenza del file, resta il preset
-    di default (mattina/pomeriggio/sera) invariato rispetto a sempre."""
+    """Se data/slot-config.json esiste (creato da configure-slots.py o dal pannello
+    web via --apply), genera le fasce da un elenco esplicito di confini orari
+    (boundaries, N+1 valori per N fasce, anche di durata diversa tra loro), con
+    chiavi numeriche "0".."N-1" — stessa identica logica di buildSlotsFromConfig()
+    in js/app.js, le due DEVONO restare in sincronia: entrambe leggono lo stesso
+    file, quindi condividono sempre la stessa definizione di fascia, altrimenti il
+    marcatore "log data" del calendario web non corrisponderebbe più agli slot
+    letti da qui. day_count/icons nel file sono concern esclusivi del lato web
+    (numero di colonne mostrate, icone dei confini) e qui vengono ignorati. In
+    assenza del file, resta il preset di default (mattina/pomeriggio/sera)
+    invariato rispetto a sempre."""
     try:
         with open(SLOT_CONFIG_FILE) as f:
             cfg = json.load(f)
-        n = cfg.get("slot_count")
-        day_start = cfg.get("day_start")
-        day_end = cfg.get("day_end")
-        if not n or day_start is None or day_end is None:
+        boundaries = cfg.get("boundaries")
+        if not isinstance(boundaries, list) or len(boundaries) < 2:
             return None
-        step = (day_end - day_start) / n
+        for i in range(1, len(boundaries)):
+            if not isinstance(boundaries[i], (int, float)) or boundaries[i] <= boundaries[i - 1]:
+                return None
+        n = len(boundaries) - 1
         keys = [str(i) for i in range(n)]
-        bounds = {keys[i]: (day_start + i * step, day_start + (i + 1) * step) for i in range(n)}
+        bounds = {keys[i]: (boundaries[i], boundaries[i + 1]) for i in range(n)}
         return keys, bounds
     except Exception:
         return None

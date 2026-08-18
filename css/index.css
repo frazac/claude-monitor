@@ -90,7 +90,7 @@
 .grid {
   --axis-w: 22px;
   display: grid;
-  grid-template-columns: var(--axis-w) repeat(7, 1fr);
+  grid-template-columns: var(--axis-w) repeat(var(--day-count, 7), 1fr) auto;
   gap: 4px;
   margin-left: calc(-1 * (var(--axis-w) + 4px));
   margin-bottom: 1.5rem;
@@ -105,6 +105,24 @@
   border-top: 1px solid var(--border);
   margin-top: 6px;
 }
+
+/* bottone rotondo "personalizza": ultima colonna del grid (vedi grid-template-columns
+   sopra, "auto" in coda), stesso stile pill di reset-btn/save-btn ma rotondo e senza testo. */
+.customize-btn {
+  width: 28px; height: 28px;
+  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0;
+  margin-left: 8px;
+}
+.customize-btn:hover { opacity: 1; }
+.customize-btn svg { width: 15px; height: 15px; display: block; }
 
 /* le icone dei confini di giornata occupano una vera colonna del grid (colonna 1),
    allineate ai confini tra le righe delle fasce tramite CSS subgrid: niente più
@@ -337,4 +355,77 @@
 #icon-globe svg {
   position: relative;
   top: 2px;
+}
+
+/* pannello di personalizzazione fasce/giorni: <dialog> nativo, nessuna libreria */
+.customize-dialog {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  max-width: 480px;
+  width: calc(100% - 2rem);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.customize-dialog::backdrop { background: rgba(0,0,0,0.4); }
+.customize-dialog h2 { font-size: 1rem; margin: 0 0 0.6rem 0; }
+.customize-dialog p { font-size: 0.8rem; color: var(--muted); margin: 0 0 0.8rem 0; }
+.customize-field { display: block; font-size: 0.8rem; margin-bottom: 0.9rem; }
+.customize-field > span { display: block; margin-bottom: 0.4rem; }
+.customize-field input[type="number"] {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: inherit;
+  padding: 0.3rem 0.7rem;
+  width: 90px;
+  box-sizing: border-box;
+}
+.customize-boundaries { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; }
+.customize-boundary-row { display: flex; align-items: center; gap: 0.3rem; }
+.customize-boundary-row input[type="number"] { width: 70px; }
+.customize-remove-btn {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 24px; height: 24px;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.customize-remove-btn:hover { opacity: 1; }
+.customize-remove-btn:disabled { opacity: 0.3; cursor: default; }
+.customize-add-btn, .customize-generate-btn, .customize-close-btn, .customize-copy-btn {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: inherit;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.customize-add-btn:hover, .customize-generate-btn:hover, .customize-close-btn:hover, .customize-copy-btn:hover { opacity: 1; }
+.customize-warning { font-size: 0.75rem; opacity: 0.7; }
+.customize-error { color: var(--over); font-size: 0.8rem; }
+.customize-actions { display: flex; gap: 0.6rem; margin-bottom: 0.8rem; }
+.customize-result { font-size: 0.8rem; }
+.customize-result code {
+  display: block;
+  font-family: monospace;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }

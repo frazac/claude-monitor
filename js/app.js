@@ -23,49 +23,91 @@ const ICONS = {
   extra6: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.7781 4.04337C17.7007 2.08074 14.9382 1 12 1C9.0618 1 6.29934 2.08089 4.2217 4.04337C2.14423 6.00617 1 8.61557 1 11.3911C1 11.7274 1.28853 12 1.64437 12C2.00038 12 2.28891 11.7274 2.28891 11.3911C2.28891 10.3784 3.16123 9.55439 4.23328 9.55439C6.12573 9.55439 5.43138 12 6.82219 12C8.21299 12 7.51871 9.55439 9.41109 9.55439C11.3035 9.55439 12 12 12 12C12 12 12.6965 9.55439 14.5889 9.55439C16.4813 9.55439 15.988 12 17.1778 12C18.3677 12 17.8743 9.55439 19.7667 9.55439C20.8388 9.55439 21.7111 10.3784 21.7111 11.3911C21.7111 11.7274 21.9996 12 22.3556 12C22.7115 12 23 11.7274 23 11.3911C23 8.61557 21.8559 6.00617 19.7781 4.04337Z" stroke="currentColor" stroke-width="1.5"></path><path d="M12 12C12 12 12 16.0948 12 20C12 24 6 24 6 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   extra7: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 12.5C17.2761 12.5 17.5 12.2761 17.5 12C17.5 11.7239 17.2761 11.5 17 11.5C16.7239 11.5 16.5 11.7239 16.5 12C16.5 12.2761 16.7239 12.5 17 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5C12.2761 12.5 12.5 12.2761 12.5 12C12.5 11.7239 12.2761 11.5 12 11.5C11.7239 11.5 11.5 11.7239 11.5 12C11.5 12.2761 11.7239 12.5 12 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7 12.5C7.27614 12.5 7.5 12.2761 7.5 12C7.5 11.7239 7.27614 11.5 7 11.5C6.72386 11.5 6.5 11.7239 6.5 12C6.5 12.2761 6.72386 12.5 7 12.5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.8214 2.48697 15.5291 3.33782 17L2.5 21.5L7 20.6622C8.47087 21.513 10.1786 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   extra8: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 15.5V2.6C2 2.26863 2.26863 2 2.6 2H21.4C21.7314 2 22 2.26863 22 2.6V15.5M2 15.5V17.4C2 17.7314 2.26863 18 2.6 18H21.4C21.7314 18 22 17.7314 22 17.4V15.5M2 15.5H22M9 22H10.5M10.5 22V18M10.5 22H13.5M13.5 22H15M13.5 22L13.5 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra9: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.5 8C11.7761 8 12 7.77614 12 7.5C12 7.22386 11.7761 7 11.5 7C11.2239 7 11 7.22386 11 7.5C11 7.77614 11.2239 8 11.5 8Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.5 11C7.77614 11 8 10.7761 8 10.5C8 10.2239 7.77614 10 7.5 10C7.22386 10 7 10.2239 7 10.5C7 10.7761 7.22386 11 7.5 11Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.5 13C11.7761 13 12 12.7761 12 12.5C12 12.2239 11.7761 12 11.5 12C11.2239 12 11 12.2239 11 12.5C11 12.7761 11.2239 13 11.5 13Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra10: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19V5C4 3.89543 4.89543 3 6 3H19.4C19.7314 3 20 3.26863 20 3.6V16.7143" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M16 8.77975C16 9.38118 15.7625 9.95883 15.3383 10.3861C14.3619 11.3701 13.415 12.3961 12.4021 13.3443C12.17 13.5585 11.8017 13.5507 11.5795 13.3268L8.6615 10.3861C7.7795 9.49725 7.7795 8.06225 8.6615 7.17339C9.55218 6.27579 11.0032 6.27579 11.8938 7.17339L11.9999 7.28027L12.1059 7.17345C12.533 6.74286 13.1146 6.5 13.7221 6.5C14.3297 6.5 14.9113 6.74284 15.3383 7.17339C15.7625 7.60073 16 8.17835 16 8.77975Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path><path d="M6 17L20 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 21L20 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 21C4.89543 21 4 20.1046 4 19C4 17.8954 4.89543 17 6 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra11: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.48901 17.7273H18.3556M8.48901 17.7273V21H18.3556V17.7273M8.48901 17.7273C5.20016 15.5455 3.55573 10.0909 4.10387 8.45455C4.54239 7.14545 6.47916 7.54545 7.39273 7.90909C7.39273 4.09091 9.03715 3 13.4223 3C17.8074 3 20 4.09091 20 9.54545C20 13.9091 18.9037 16.8182 18.3556 17.7273" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.39282 7.90909C7.75825 8.27272 8.81799 9 10.1335 9C11.4491 9 13.9705 9 15.0668 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.39282 7.90909C7.39282 11.7273 9.03725 12.2727 10.1335 12.2727" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra12: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 7C17.1046 7 18 6.10457 18 5C18 3.89543 17.1046 3 16 3C14.8954 3 14 3.89543 14 5C14 6.10457 14.8954 7 16 7ZM16 7C16 7 16 13.0948 16 17C16 23 6 23 6 17V13L8 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra13: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.4 7H4.6C4.26863 7 4 7.26863 4 7.6V16.4C4 16.7314 4.26863 17 4.6 17H7.4C7.73137 17 8 16.7314 8 16.4V7.6C8 7.26863 7.73137 7 7.4 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M19.4 7H16.6C16.2686 7 16 7.26863 16 7.6V16.4C16 16.7314 16.2686 17 16.6 17H19.4C19.7314 17 20 16.7314 20 16.4V7.6C20 7.26863 19.7314 7 19.4 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M1 14.4V9.6C1 9.26863 1.26863 9 1.6 9H3.4C3.73137 9 4 9.26863 4 9.6V14.4C4 14.7314 3.73137 15 3.4 15H1.6C1.26863 15 1 14.7314 1 14.4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M23 14.4V9.6C23 9.26863 22.7314 9 22.4 9H20.6C20.2686 9 20 9.26863 20 9.6V14.4C20 14.7314 20.2686 15 20.6 15H22.4C22.7314 15 23 14.7314 23 14.4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 12H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra14: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.5714 15.0036L15.4286 16.8486C15.4286 16.8486 19.2857 17.6678 19.2857 19.6162C19.2857 21 17.5714 21 17.5714 21H13L10.75 19.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.42864 15.0036L8.5715 16.8486C8.5715 16.8486 4.71436 17.6678 4.71436 19.6162C4.71436 21 6.42864 21 6.42864 21H8.50007L10.7501 19.75L13.5001 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 15.9261C3 15.9261 5.14286 15.4649 6.42857 15.0036C7.71429 8.54595 11.5714 9.00721 12 9.00721C12.4286 9.00721 16.2857 8.54595 17.5714 15.0036C18.8571 15.4649 21 15.9261 21 15.9261" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 7C13.1046 7 14 6.10457 14 5C14 3.89543 13.1046 3 12 3C10.8954 3 10 3.89543 10 5C10 6.10457 10.8954 7 12 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra15: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 20.2895V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V15C21 16.1046 20.1046 17 19 17H7.96125C7.35368 17 6.77906 17.2762 6.39951 17.7506L4.06852 20.6643C3.71421 21.1072 3 20.8567 3 20.2895Z" stroke="currentColor" stroke-width="1.5"></path><path d="M10.5 10H8.5C7.94772 10 7.5 9.55228 7.5 9V8C7.5 7.44772 7.94772 7 8.5 7H9.5C10.0523 7 10.5 7.44772 10.5 8V10ZM10.5 10C10.5 11 9.5 12 8.5 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M16.5 10H14.5C13.9477 10 13.5 9.55228 13.5 9V8C13.5 7.44772 13.9477 7 14.5 7H15.5C16.0523 7 16.5 7.44772 16.5 8V10ZM16.5 10C16.5 11 15.5 12 14.5 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>',
+  extra16: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 19H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2 16.4V7.6C2 7.26863 2.26863 7 2.6 7H21.4C21.7314 7 22 7.26863 22 7.6V16.4C22 16.7314 21.7314 17 21.4 17H2.6C2.26863 17 2 16.7314 2 16.4Z" stroke="currentColor" stroke-width="1.5"></path><path d="M5 10.01L5.01 9.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 10.01L8.01 9.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 10.01L11.01 9.99889" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 14.01L5.01 13.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 14.01L8.01 13.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 14.01L11.01 13.9989" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M17 14C18.1046 14 19 13.1046 19 12C19 10.8954 18.1046 10 17 10C15.8954 10 15 10.8954 15 12C15 13.1046 15.8954 14 17 14Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra17: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.03919 4.2939C3.01449 4.10866 3.0791 3.92338 3.23133 3.81499C3.9272 3.31953 6.3142 2 12 2C17.6858 2 20.0728 3.31952 20.7687 3.81499C20.9209 3.92338 20.9855 4.10866 20.9608 4.2939L19.2616 17.0378C19.0968 18.2744 18.3644 19.3632 17.2813 19.9821L16.9614 20.1649C13.8871 21.9217 10.1129 21.9217 7.03861 20.1649L6.71873 19.9821C5.6356 19.3632 4.90325 18.2744 4.73838 17.0378L3.03919 4.2939Z" stroke="currentColor" stroke-width="1.5"></path><path d="M3 5C5.57143 7.66666 18.4286 7.66662 21 5" stroke="currentColor" stroke-width="1.5"></path><path d="M4 13C5.03151 14.2034 7.92505 14.8638 11 14.981C12.3455 15.0323 13.7258 14.9796 15 14.823C17.2664 14.5443 19.1972 13.9366 20 13" stroke="currentColor" stroke-width="1.5"></path><path d="M4 13C6.28571 10.3333 17.7143 10.3334 20 13" stroke="currentColor" stroke-width="1.5"></path></svg>',
+  extra18: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 8.5L9.8 9L2.35172 12.3856C2.13752 12.4829 2 12.6965 2 12.9318V13.0682C2 13.3035 2.13752 13.5171 2.35172 13.6144L11.1724 17.6238C11.6982 17.8628 12.3018 17.8628 12.8276 17.6238L21.6483 13.6144C21.8625 13.5171 22 13.3035 22 13.0682V12.9318C22 12.6965 21.8625 12.4829 21.6483 12.3856L14.2 9L13 8.5" stroke="currentColor" stroke-width="1.5"></path><path d="M22 13V17.112C22 17.3482 21.8615 17.5623 21.6462 17.6592L12.8207 21.6307C12.2988 21.8655 11.7012 21.8655 11.1793 21.6307L2.35378 17.6592C2.13847 17.5623 2 17.3482 2 17.112V13" stroke="currentColor" stroke-width="1.5"></path><path d="M12 8C10.3431 8 9 6.65685 9 5C9 3.34315 10.3431 2 12 2C13.6569 2 15 3.34315 15 5C15 6.65685 13.6569 8 12 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11 8V13C11 13.5523 11.4477 14 12 14V14C12.5523 14 13 13.5523 13 13V8" stroke="currentColor" stroke-width="1.5"></path><path d="M16 13H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra19: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 16L2 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 9V7C4 5.89543 4.89543 5 6 5L18 5C19.1046 5 20 5.89543 20 7V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M20 9C18.8954 9 18 9.89543 18 11V13H6V11C6 9.89543 5.10457 9 4 9C2.89543 9 2 9.89543 2 11V17H22V11C22 9.89543 21.1046 9 20 9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 16L22 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra20: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22L12 14M12 10L12 14M12 14L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 18H7.5C4.46243 18 2 15.5376 2 12.5C2 9.46243 4.46243 7 7.5 7H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 18H16.5C19.5376 18 22 15.5376 22 12.5C22 9.63102 19.8033 7.27508 17 7.02246" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  extra21: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 19C7.20914 19 9 17.2091 9 15C9 12.7909 7.20914 11 5 11C2.79086 11 1 12.7909 1 15C1 17.2091 2.79086 19 5 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8.5 7.5L14.5 7.5M19 15L15 7.5L14.5 7.5M14.5 7.5L16.5 4.5M16.5 4.5L14 4.5M16.5 4.5L18.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 15L8.5 7.5L12 14L15 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8.5 7.5C8.16667 6.5 7 4.5 5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M19 19C21.2091 19 23 17.2091 23 15C23 12.7909 21.2091 11 19 11C16.7909 11 15 12.7909 15 15C15 17.2091 16.7909 19 19 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
 };
 
 // =========================================================================
-// PERSONALIZZAZIONE: fasce della giornata (righe del calendario) e icone che
-// ne segnano i confini.
+// PERSONALIZZAZIONE: fasce della giornata (righe del calendario), giorni
+// mostrati (colonne) e icone che segnano i confini tra le fasce.
 //
 // Preset di default (nessuna personalizzazione salvata): 3 fasce fisse
 // (mattina/pomeriggio/sera, orari asimmetrici pensati per una giornata tipo)
-// con le 4 icone tematiche originali — comportamento identico a sempre.
+// con le 4 icone tematiche originali, 7 giorni — comportamento identico a
+// sempre.
 //
-// Se l'utente personalizza tramite `configure-slots.py` (ora di inizio/fine
-// giornata attiva + numero di fasce, 1-12, condiviso con statusline.py via
-// data/slot-config.json — vedi loadSlotConfig()), le fasce diventano N
-// intervalli di uguale durata tra le due ore scelte, con chiavi numeriche
-// ("0".."N-1") invece dei nomi mattina/pomeriggio/sera, e i confini pescano
-// le icone dal pool DEFAULT_BOUNDARY_ICON_POOL qui sotto, in ciclo se N+1
-// supera la lunghezza del pool. Personalizza il pool (o la sua lunghezza)
-// per usare le tue icone al posto delle 8 extra di default.
+// Se l'utente personalizza (dal pannello nella dashboard, che genera un
+// comando `configure-slots.py --apply` da incollare in terminale — oppure a
+// mano da terminale con lo stesso script — condiviso con statusline.py via
+// data/slot-config.json, vedi loadSlotConfig()), le fasce diventano un
+// elenco esplicito di confini orari (`boundaries`, N+1 valori per N fasce,
+// anche di durata diversa tra loro — es. una fascia notturna più lunga)
+// invece della divisione equa di prima, con chiavi numeriche ("0".."N-1")
+// al posto dei nomi mattina/pomeriggio/sera. Ogni confine ha un'icona
+// derivata deterministicamente dalla propria ora (vedi defaultIconForHour),
+// pescata dal pool DEFAULT_BOUNDARY_ICON_POOL qui sotto — nessun picker per
+// sceglierla a mano nel pannello (per ora), ma un file scritto/editato a
+// mano può comunque includere un campo "icons" esplicito che ha sempre la
+// precedenza sul default automatico.
 // =========================================================================
 const DEFAULT_SLOT_KEYS = ['mattina', 'pomeriggio', 'sera'];
 const DEFAULT_SLOT_BOUNDS = { mattina: { start: 0, end: 12 }, pomeriggio: { start: 12, end: 19 }, sera: { start: 19, end: 24 } };
 const DEFAULT_BOUNDARY_ICON_KEYS = ['coffee', 'apple', 'pizza', 'bed'];
-const DEFAULT_BOUNDARY_ICON_POOL = ['coffee', 'apple', 'pizza', 'bed', 'extra1', 'extra2', 'extra3', 'extra4', 'extra5', 'extra6', 'extra7', 'extra8'];
+const DEFAULT_BOUNDARY_ICON_POOL = [
+  'coffee', 'apple', 'pizza', 'bed', 'extra1', 'extra2', 'extra3', 'extra4', 'extra5', 'extra6', 'extra7', 'extra8',
+  'extra9', 'extra10', 'extra11', 'extra12', 'extra13', 'extra14', 'extra15', 'extra16', 'extra17', 'extra18', 'extra19', 'extra20', 'extra21',
+];
+const DEFAULT_DAY_COUNT = 7;
 
 let SLOT_KEYS = DEFAULT_SLOT_KEYS;
 let SLOT_BOUNDS = DEFAULT_SLOT_BOUNDS;
 let BOUNDARY_ICON_KEYS = DEFAULT_BOUNDARY_ICON_KEYS;
+let DAY_COUNT = DEFAULT_DAY_COUNT;
+let usingDefaultSlotPreset = true;
 
-// genera N fasce di uguale durata tra dayStart e dayEnd (ore, 0-24); slot_for_hour
-// (qui e in statusline.py, dove la stessa logica è duplicata in Python) assegna
-// ogni ora della fascia [dayStart, dayEnd) allo slot corrispondente, e qualunque
-// ora FUORI da quell'intervallo all'ultimo slot (stesso comportamento del preset
-// di default, dove "sera" raccoglie anche l'eventuale notte fuori 0-24).
+// icona di default per un confine, in base alla sua ora (0-24): con 25 icone
+// nel pool e 25 ore intere possibili (0..24 inclusi), ogni ora ha un'icona
+// distinta, senza collisioni tra primo e ultimo confine della giornata.
+function defaultIconForHour(h) {
+  return DEFAULT_BOUNDARY_ICON_POOL[Math.floor(h) % DEFAULT_BOUNDARY_ICON_POOL.length];
+}
+
+// costruisce fasce da un elenco esplicito di confini orari (cfg.boundaries,
+// N+1 valori per N fasce, anche di durata diversa tra loro); slot_for_hour
+// (qui e in statusline.py, dove la stessa logica è duplicata in Python)
+// assegna ogni ora dentro [boundaries[0], boundaries[last]) allo slot
+// corrispondente, e qualunque ora FUORI da quell'intervallo all'ultimo slot
+// (stesso comportamento del preset di default, dove "sera" raccoglie anche
+// l'eventuale notte fuori 0-24).
 function buildSlotsFromConfig(cfg) {
-  const n = cfg.slot_count;
+  const b = cfg.boundaries;
+  const n = b.length - 1;
   const keys = Array.from({ length: n }, (_, i) => String(i));
   const bounds = {};
-  const step = (cfg.day_end - cfg.day_start) / n;
-  keys.forEach((key, i) => {
-    bounds[key] = { start: cfg.day_start + i * step, end: cfg.day_start + (i + 1) * step };
-  });
-  const icons = Array.from({ length: n + 1 }, (_, i) => DEFAULT_BOUNDARY_ICON_POOL[i % DEFAULT_BOUNDARY_ICON_POOL.length]);
-  return { keys, bounds, icons };
+  keys.forEach((key, i) => { bounds[key] = { start: b[i], end: b[i + 1] }; });
+  const icons = b.map((h, i) => (cfg.icons && cfg.icons[i]) || defaultIconForHour(h));
+  const dayCount = cfg.day_count || DEFAULT_DAY_COUNT;
+  return { keys, bounds, icons, dayCount };
+}
+
+function isValidBoundaries(b) {
+  if (!Array.isArray(b) || b.length < 2 || b.length > 13) return false;
+  for (let i = 0; i < b.length; i++) {
+    if (typeof b[i] !== 'number' || Number.isNaN(b[i])) return false;
+    if (i > 0 && b[i] <= b[i - 1]) return false;
+  }
+  return true;
 }
 
 // data/slot-config.json non esiste finché non lanci `configure-slots.py` (stesso
@@ -76,11 +118,13 @@ async function loadSlotConfig() {
     const res = await fetch('data/slot-config.json?_=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const cfg = await res.json();
-    if (!cfg || !cfg.slot_count) return;
+    if (!cfg || !isValidBoundaries(cfg.boundaries)) return;
     const built = buildSlotsFromConfig(cfg);
     SLOT_KEYS = built.keys;
     SLOT_BOUNDS = built.bounds;
     BOUNDARY_ICON_KEYS = built.icons;
+    DAY_COUNT = Math.max(1, Math.min(7, built.dayCount));
+    usingDefaultSlotPreset = false;
   } catch (e) {
     // nessun file, o non valido: resta sul preset di default
   }
@@ -106,10 +150,26 @@ const TIMEZONES = ['local', 'UTC', 'Europe/Rome', 'Europe/London', 'America/New_
 let planDays = null; // costruito una volta noto resets_at
 let lastData = null; // ultimo state.json valido, per riformattare gli orari senza ripollare
 
+// ora di ciascun confine, ricostruita da SLOT_BOUNDS: N fasce hanno N+1
+// confini (l'inizio di ognuna + la fine dell'ultima), stessa lunghezza di
+// BOUNDARY_ICON_KEYS.
+function currentBoundaryHours() {
+  const hours = SLOT_KEYS.map(k => SLOT_BOUNDS[k].start);
+  hours.push(SLOT_BOUNDS[SLOT_KEYS[SLOT_KEYS.length - 1]].end);
+  return hours;
+}
+
 function buildExplanationHTML() {
-  const boundaryLine = BOUNDARY_ICON_KEYS.map((iconKey, i) =>
-    (T.boundaryLabels[i] || '') + ' <span class="inline-icon">' + ICONS[iconKey] + '</span>'
-  ).join(' · ');
+  const boundaryHours = currentBoundaryHours();
+  // sul preset di default le 4 icone hanno un'etichetta testuale fissa
+  // (sveglia/pranzo/cena/a nanna); su una configurazione personalizzata,
+  // dove le etichette fisse non hanno più senso per un numero qualunque di
+  // confini, si mostra l'orario del confine al loro posto — autoesplicativo,
+  // nessuna nuova chiave i18n necessaria.
+  const boundaryLine = BOUNDARY_ICON_KEYS.map((iconKey, i) => {
+    const caption = usingDefaultSlotPreset ? (T.boundaryLabels[i] || '') : hourLabel(boundaryHours[i]);
+    return caption + ' <span class="inline-icon">' + ICONS[iconKey] + '</span>';
+  }).join(' · ');
   return '<p>' + T.explanation + '</p>' +
     '<p>' + T.boundaryIntro + ' ' + boundaryLine + '.</p>' +
     '<p>' + T.planSaved + ' (<a href="cookies.html">' + T.planSavedDetails + '</a>)' + T.planSavedRest + '</p>';
@@ -149,6 +209,17 @@ function applyStrings() {
     T.madeWithSuffix;
   document.getElementById('stream-banner-cmd').innerHTML = T.streamDisconnectedHint + '<br><code>python3 install-statusline.py</code>';
   setStreamBanner(streamConnected);
+
+  document.getElementById('customize-title').textContent = T.customizeTitle;
+  document.getElementById('customize-intro').textContent = T.customizeIntro;
+  document.getElementById('customize-day-count-label').textContent = T.customizeDayCountLabel;
+  document.getElementById('customize-boundaries-label').textContent = T.customizeBoundariesLabel;
+  document.getElementById('customize-add-boundary').textContent = T.customizeAddBoundary;
+  document.getElementById('customize-warning').textContent = T.customizeWarning;
+  document.getElementById('customize-generate').textContent = T.customizeGenerate;
+  document.getElementById('customize-close').textContent = T.customizeClose;
+  document.getElementById('customize-copy').textContent = T.customizeCopy;
+  document.getElementById('customize-result-intro').textContent = T.customizeResultIntro;
 }
 
 let streamConnected = false;
@@ -176,7 +247,7 @@ function isoDateLocal(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function computeSevenDays(resetsAt) {
+function computeDisplayDays(resetsAt, dayCount) {
   const windowStart = new Date(resetsAt.getTime() - 7 * 86400 * 1000);
   let startDate;
   if (windowStart.getHours() < 11) {
@@ -185,7 +256,7 @@ function computeSevenDays(resetsAt) {
     startDate = new Date(dateOnly(windowStart).getTime() + 86400 * 1000);
   }
   const result = [];
-  for (let offset = 0; offset < 7; offset++) {
+  for (let offset = 0; offset < dayCount; offset++) {
     result.push(new Date(startDate.getTime() + offset * 86400 * 1000));
   }
   return result;
@@ -309,7 +380,7 @@ function computePlanTargets(days, now) {
       }
       if (nowHour >= b.start && nowHour < b.end) {
         const fraction = (nowHour - b.start) / (b.end - b.start);
-        currentTile = { dayIdx: t.dayIdx, slotKey: t.slot.key, fraction };
+        currentTile = { dayIdx: t.dayIdx, slotKey: t.slot.key, fraction, start: b.start, end: b.end };
       }
     }
   }
@@ -345,6 +416,7 @@ function renderPlan() {
   // sia col preset di default (3 fasce, 46px) sia con configurazioni più fitte.
   const tileHeight = Math.max(24, 46 - (SLOT_KEYS.length - 3) * 2);
   document.documentElement.style.setProperty('--tile-h', tileHeight + 'px');
+  document.documentElement.style.setProperty('--day-count', DAY_COUNT);
 
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -360,6 +432,22 @@ function renderPlan() {
       String(day.date.getDate()).padStart(2, '0') + '/' + String(day.date.getMonth() + 1).padStart(2, '0') + '</div>';
     grid.appendChild(head);
   });
+
+  // bottone rotondo "personalizza": una vera colonna finale del grid (non un
+  // overlay assoluto — questa codebase non ha breakpoint responsive, quindi
+  // un posizionamento assoluto "appena fuori" dalla griglia rischierebbe
+  // clipping su viewport stretti). Va ricreato ad ogni renderPlan() perché
+  // grid.innerHTML viene svuotato sopra, come già per il resto della griglia.
+  const customizeBtn = document.createElement('button');
+  customizeBtn.type = 'button';
+  customizeBtn.className = 'customize-btn';
+  customizeBtn.style.gridColumn = String(DAY_COUNT + 2);
+  customizeBtn.style.gridRow = '1';
+  customizeBtn.title = T.customizeTitle;
+  customizeBtn.setAttribute('aria-label', T.customizeTitle);
+  customizeBtn.innerHTML = ICONS.extra16; // forma a cursori/equalizzatore, usata come icona "impostazioni"
+  customizeBtn.addEventListener('click', openCustomizeDialog);
+  grid.appendChild(customizeBtn);
 
   // asse verticale: colonna 1 del grid, subgrid sulle righe delle fasce (righe 2..N+1)
   // così eredita esattamente le stesse linee di riga del grid principale — nessun
@@ -415,6 +503,7 @@ function renderPlan() {
         const marker = document.createElement('div');
         marker.className = 'now-marker' + (overPace ? ' over' : '');
         marker.style.left = (currentTile.fraction * 100) + '%';
+        marker.title = formatTime(now) + ' — ' + hourLabel(currentTile.start) + '–' + hourLabel(currentTile.end);
         cell.appendChild(marker);
       }
 
@@ -496,6 +585,103 @@ function setupPlanToolbar() {
   });
 
   refreshLoadSelect();
+}
+
+// --- personalizzazione fasce/giorni: il pannello non scrive nulla da solo,
+// genera un comando `configure-slots.py --apply '<json>'` da incollare in
+// terminale una tantum — mantiene web e statusline.py sincronizzati sullo
+// stesso data/slot-config.json, come già oggi per il flusso interattivo. ---
+let customizeBoundaries = []; // stato di lavoro del pannello, aperto = copia di currentBoundaryHours()
+
+function renderCustomizeBoundaries() {
+  const container = document.getElementById('customize-boundaries');
+  container.innerHTML = '';
+  customizeBoundaries.forEach((h, i) => {
+    const row = document.createElement('div');
+    row.className = 'customize-boundary-row';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = '24';
+    input.step = '0.25';
+    input.value = h;
+    input.addEventListener('change', () => {
+      const v = parseFloat(input.value);
+      if (!Number.isNaN(v)) customizeBoundaries[i] = v;
+    });
+    row.appendChild(input);
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'customize-remove-btn';
+    removeBtn.textContent = '×';
+    removeBtn.setAttribute('aria-label', T.customizeRemoveBoundary);
+    removeBtn.disabled = customizeBoundaries.length <= 2;
+    removeBtn.addEventListener('click', () => {
+      if (customizeBoundaries.length <= 2) return;
+      customizeBoundaries.splice(i, 1);
+      renderCustomizeBoundaries();
+    });
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+  });
+}
+
+function openCustomizeDialog() {
+  customizeBoundaries = currentBoundaryHours().slice();
+  document.getElementById('customize-day-count').value = DAY_COUNT;
+  renderCustomizeBoundaries();
+  document.getElementById('customize-error').hidden = true;
+  document.getElementById('customize-result').hidden = true;
+  document.getElementById('customize-dialog').showModal();
+}
+
+function generateCustomizeCommand() {
+  const dayCount = parseInt(document.getElementById('customize-day-count').value, 10);
+  const errorEl = document.getElementById('customize-error');
+  const resultEl = document.getElementById('customize-result');
+
+  if (!Number.isInteger(dayCount) || dayCount < 1 || dayCount > 7) {
+    errorEl.textContent = T.customizeErrorDayCount;
+    errorEl.hidden = false;
+    resultEl.hidden = true;
+    return;
+  }
+  if (!isValidBoundaries(customizeBoundaries) || customizeBoundaries[0] < 0 ||
+      customizeBoundaries[customizeBoundaries.length - 1] > 24) {
+    errorEl.textContent = T.customizeErrorBoundaries;
+    errorEl.hidden = false;
+    resultEl.hidden = true;
+    return;
+  }
+  errorEl.hidden = true;
+  const cfg = { boundaries: customizeBoundaries.slice(), day_count: dayCount };
+  const command = "python3 configure-slots.py --apply '" + JSON.stringify(cfg) + "'";
+  document.getElementById('customize-command').textContent = command;
+  resultEl.hidden = false;
+}
+
+function setupCustomizeDialog() {
+  const dialog = document.getElementById('customize-dialog');
+  // niente submit nativo del <form> (rischierebbe di ricaricare la pagina
+  // premendo Invio in un campo numerico): solo bottoni con azioni JS proprie.
+  dialog.querySelector('form').addEventListener('submit', e => e.preventDefault());
+  document.getElementById('customize-add-boundary').addEventListener('click', () => {
+    if (customizeBoundaries.length >= 13) return;
+    const last = customizeBoundaries[customizeBoundaries.length - 1];
+    customizeBoundaries.push(Math.min(24, last + 1));
+    renderCustomizeBoundaries();
+  });
+  document.getElementById('customize-generate').addEventListener('click', generateCustomizeCommand);
+  document.getElementById('customize-close').addEventListener('click', () => dialog.close());
+  document.getElementById('customize-copy').addEventListener('click', () => {
+    const text = document.getElementById('customize-command').textContent;
+    const btn = document.getElementById('customize-copy');
+    navigator.clipboard.writeText(text).then(() => {
+      const original = T.customizeCopy;
+      btn.textContent = T.customizeCopied;
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  });
 }
 
 // --- banner informativo su local storage (non cookie) ---
@@ -585,6 +771,19 @@ function formatDuration(ms) {
   const minutes = totalMinutes % 60;
   if (hours > 0) return hours + T.hourUnit + ' ' + minutes + T.minuteUnit;
   return minutes + T.minuteUnit;
+}
+// formatta un'ora astratta di confine slot (0-24, non legata a una data/tz
+// precisa) rispettando il toggle 24h/AM-PM già in pagina.
+function hourLabel(h) {
+  const totalMinutes = Math.round((((h % 24) + 24) % 24) * 60);
+  const hh = Math.floor(totalMinutes / 60);
+  const mm = totalMinutes % 60;
+  if (getHour12()) {
+    const period = hh < 12 ? 'AM' : 'PM';
+    const h12 = hh % 12 === 0 ? 12 : hh % 12;
+    return h12 + ':' + String(mm).padStart(2, '0') + ' ' + period;
+  }
+  return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 }
 
 function updateTimeDisplays() {
@@ -676,7 +875,7 @@ function render(data) {
 
   if (!planDays && data.reset_date) {
     const resetsAt = parseResetDate(data.reset_date);
-    const dates = computeSevenDays(resetsAt);
+    const dates = computeDisplayDays(resetsAt, DAY_COUNT);
     planDays = buildDayModel(dates, loadPlan());
   }
   renderPlan();
@@ -708,6 +907,7 @@ async function poll() {
   // influenzano sia il testo (buildExplanationHTML) sia il modello del piano
   applyStrings();
   setupPlanToolbar();
+  setupCustomizeDialog();
   setupThemeSwitch();
   setupTzControls();
   setupConsentBanner();

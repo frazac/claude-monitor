@@ -54,6 +54,38 @@
 
   <div class="explanation" id="explanation"></div>
 
+  <dialog id="customize-dialog" class="customize-dialog">
+    <form method="dialog" class="customize-form">
+      <h2 id="customize-title"></h2>
+      <p id="customize-intro"></p>
+
+      <label class="customize-field">
+        <span id="customize-day-count-label"></span>
+        <input type="number" id="customize-day-count" min="1" max="7" step="1">
+      </label>
+
+      <div class="customize-field">
+        <span id="customize-boundaries-label"></span>
+        <div class="customize-boundaries" id="customize-boundaries"></div>
+        <button type="button" class="customize-add-btn" id="customize-add-boundary"></button>
+      </div>
+
+      <p class="customize-warning" id="customize-warning"></p>
+      <p class="customize-error" id="customize-error" hidden></p>
+
+      <div class="customize-actions">
+        <button type="button" class="customize-generate-btn" id="customize-generate"></button>
+        <button type="button" class="customize-close-btn" id="customize-close"></button>
+      </div>
+
+      <div class="customize-result" id="customize-result" hidden>
+        <span id="customize-result-intro"></span>
+        <code id="customize-command"></code>
+        <button type="button" class="customize-copy-btn" id="customize-copy"></button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="updated" id="updated"></div>
 
   <div class="hairline footer-controls">

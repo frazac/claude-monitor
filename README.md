@@ -71,24 +71,36 @@ by hand instead.
 
 By default the calendar splits each day into 3 fixed slots (morning/afternoon/evening,
 uneven hours meant to match a typical day) with 4 themed boundary icons (coffee, apple,
-pizza, bed). To use a different number of slots (1-12) and/or a different active-day
-time range, run:
+pizza, bed), 7 days shown.
+
+You can customize the slot boundaries — including slots of different lengths from each
+other, e.g. a longer overnight slot — and the number of days shown (1-7), two ways:
+
+**From the dashboard**: click the round button next to the calendar grid to open the
+customize panel. Set the number of days and the list of hour boundaries (add/remove
+rows as needed), then click "Generate command" — it builds a
+`python3 configure-slots.py --apply '<json>'` command for you to copy and run once in a
+terminal, inside the project folder. Boundary icons are always assigned automatically
+based on their hour (no manual picker yet).
+
+**From a terminal**, interactively:
 
 ```
 python3 configure-slots.py
 ```
 
-It asks for the start/end hour of your active day and how many equal-length slots to
-split it into, and writes `data/slot-config.json` — read by **both** the web dashboard
-and `statusline.py`, so they always agree on the same slot definitions (this file
-doesn't exist until you run the script; without it, the default 3-slot preset is
-unchanged). Boundary icons beyond the original 4 are pulled from a larger default pool
-(edit `DEFAULT_BOUNDARY_ICON_POOL` in `js/app.js` to use your own). Run
+It asks for the start/end hour of your active day, how many equal-length slots to split
+it into, and how many days to show, and writes `data/slot-config.json` — read by
+**both** the web dashboard and `statusline.py`, so they always agree on the same slot
+definitions (this file doesn't exist until you run the script or apply a command from
+the panel; without it, the default 3-slot/7-day preset is unchanged). Boundary icons
+beyond the original 4 are pulled from a larger default pool (edit
+`DEFAULT_BOUNDARY_ICON_POOL` in `js/app.js` to use your own). Run
 `python3 configure-slots.py --reset` to go back to the default preset at any time.
 
-**Note:** changing the slot count/hours changes the format of the keys your plan is
-saved under in the browser — a plan saved under one configuration won't carry over to
-a different one (it isn't deleted, just not applied until you switch back).
+**Note:** changing the slots/days changes the format of the keys your plan is saved
+under in the browser — a plan saved under one configuration won't carry over to a
+different one (it isn't deleted, just not applied until you switch back).
 
 ## Requirements
 
