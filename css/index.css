@@ -215,6 +215,21 @@
 }
 .stream-banner.connected .stream-banner-cmd { display: none; }
 
+/* piano corrente/nominato non salvato per la config fasce attiva, vedi
+   planCompatStatus/renderPlanCompatBanner in js/app.js */
+.plan-compat-banner {
+  margin-bottom: 1.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--over);
+  color: var(--over);
+  font-size: 0.85rem;
+}
+.plan-compat-banner-title { font-weight: 600; }
+.plan-compat-banner-body { margin-top: 0.4rem; opacity: 0.9; }
+.plan-compat-banner-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
+.plan-compat-banner-actions button { color: var(--over); border-color: var(--over); }
+
 .updated { opacity: 0.4; font-size: 0.8rem; margin-top: 1rem; }
 .updated.error {
   opacity: 1;
@@ -413,9 +428,14 @@
   white-space: nowrap;
 }
 .customize-add-btn:hover, .customize-generate-btn:hover, .customize-close-btn:hover, .customize-copy-btn:hover { opacity: 1; }
+/* bottoni con etichette lunghe (banner/dialog di conflitto): la forma a
+   pillola con nowrap va bene per "Chiudi"/"Copia", non per frasi intere —
+   qui il testo va a capo dentro un bottone rettangolare. */
+.customize-action-btn-wrap { white-space: normal; text-align: left; border-radius: 10px; }
 .customize-warning { font-size: 0.75rem; opacity: 0.7; }
+.customize-affected-plans { color: var(--over); font-size: 0.75rem; }
 .customize-error { color: var(--over); font-size: 0.8rem; }
-.customize-actions { display: flex; gap: 0.6rem; margin-bottom: 0.8rem; }
+.customize-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
 .customize-result { font-size: 0.8rem; }
 .customize-result code {
   display: block;

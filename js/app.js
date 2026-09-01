@@ -140,6 +140,7 @@ let T = STRINGS[LOCALE];
 const POLL_MS = 5000;
 const STALE_THRESHOLD_MS = 20 * 60 * 1000; // dati più vecchi di 20 min: statusline.py scrive solo con una sessione Claude Code interattiva attiva
 const PLAN_KEY = 'claude-monitor-plan';
+const PLAN_SLOT_SIGNATURE_KEY = 'claude-monitor-plan-slot-signature'; // config fasce sotto cui PLAN_KEY è stato scritto, vedi currentSlotSignature()
 const NAMED_PLANS_KEY = 'claude-monitor-named-plans';
 const MAX_SAVED_PLANS = 112; // come le settimane dell'anno
 const THEME_KEY = 'claude-monitor-theme';
@@ -148,6 +149,7 @@ const HOUR12_KEY = 'claude-monitor-hour12';
 const TIMEZONES = ['local', 'UTC', 'Europe/Rome', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'Asia/Shanghai'];
 
 let planDays = null; // costruito una volta noto resets_at
+let planCompatStatus = 'compatible'; // 'compatible' | 'incompatible' | 'unknown' — vedi planIsCompatibleWith
 let lastData = null; // ultimo state.json valido, per riformattare gli orari senza ripollare
 
 // ora di ciascun confine, ricostruita da SLOT_BOUNDS: N fasce hanno N+1
@@ -157,6 +159,60 @@ function currentBoundaryHours() {
   const hours = SLOT_KEYS.map(k => SLOT_BOUNDS[k].start);
   hours.push(SLOT_BOUNDS[SLOT_KEYS[SLOT_KEYS.length - 1]].end);
   return hours;
+}
+
+// =========================================================================
+// firma della configurazione fasce sotto cui un piano (corrente o nominato)
+// è stato salvato: le chiavi weekday:slotKey usano SLOT_KEYS, che con due
+// config diverse ma con lo stesso numero di fasce sarebbero identiche pur
+// avendo orari diversi — per questo la firma porta gli orari grezzi
+// (boundaries), non le chiavi derivate. Cambiare fasce/giorni senza questa
+// firma faceva ricadere silenziosamente ogni slot sul default (vedi
+// defaultActive), con rischio di sovrascrivere il piano vero: vedi
+// planCompatStatus e persistPlanGuarded più sotto.
+// =========================================================================
+function currentSlotSignature() {
+  return { boundaries: currentBoundaryHours(), day_count: DAY_COUNT };
+}
+
+function defaultSlotSignature() {
+  const hours = DEFAULT_SLOT_KEYS.map(k => DEFAULT_SLOT_BOUNDS[k].start);
+  hours.push(DEFAULT_SLOT_BOUNDS[DEFAULT_SLOT_KEYS[DEFAULT_SLOT_KEYS.length - 1]].end);
+  return { boundaries: hours, day_count: DEFAULT_DAY_COUNT };
+}
+
+// day_count non entra nel confronto: non influenza le chiavi weekday:slotKey,
+// solo quante colonne-giorno sono visibili.
+function slotSignaturesCompatible(a, b) {
+  if (!a || !b || a.boundaries.length !== b.boundaries.length) return false;
+  return a.boundaries.every((h, i) => Math.abs(h - b.boundaries[i]) < 1e-9);
+}
+
+// dati salvati prima di questa fix non hanno una firma: se la config attiva
+// ora è ancora il preset di default, per esclusione devono essere stati
+// creati sotto quello stesso preset; se la config attiva è già custom, non
+// c'è modo di saperlo (non inventiamo una firma per dati potenzialmente già
+// scritti sotto un'altra config custom precedente).
+function effectiveSignatureForCompatCheck(storedSignature) {
+  if (storedSignature) return storedSignature;
+  return usingDefaultSlotPreset ? defaultSlotSignature() : null;
+}
+
+// tri-stato di compatibilità di una firma salvata rispetto a una firma
+// target (la config attiva ora, oppure una config candidata non ancora
+// applicata quando si valuta il pannello di personalizzazione).
+function planIsCompatibleWith(storedSignature, targetSignature) {
+  const effective = effectiveSignatureForCompatCheck(storedSignature);
+  if (!effective) return 'unknown';
+  return slotSignaturesCompatible(effective, targetSignature) ? 'compatible' : 'incompatible';
+}
+
+function loadPlanSlotSignature() {
+  try { return JSON.parse(localStorage.getItem(PLAN_SLOT_SIGNATURE_KEY) || 'null'); }
+  catch (e) { return null; }
+}
+function savePlanSlotSignature(sig) {
+  localStorage.setItem(PLAN_SLOT_SIGNATURE_KEY, JSON.stringify(sig));
 }
 
 function buildExplanationHTML() {
@@ -220,6 +276,13 @@ function applyStrings() {
   document.getElementById('customize-close').textContent = T.customizeClose;
   document.getElementById('customize-copy').textContent = T.customizeCopy;
   document.getElementById('customize-result-intro').textContent = T.customizeResultIntro;
+
+  document.getElementById('plan-compat-regenerate').textContent = T.planCompatRegenerate;
+  document.getElementById('plan-compat-adopt').textContent = T.planCompatAdopt;
+
+  document.getElementById('plan-conflict-title').textContent = T.planConflictTitle;
+  document.getElementById('plan-conflict-regenerate').textContent = T.planConflictRegenerate;
+  document.getElementById('plan-conflict-cancel').textContent = T.planConflictCancel;
 }
 
 let streamConnected = false;
@@ -272,6 +335,10 @@ function loadPlan() {
 
 function savePlan(plan) {
   localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+  // choke point unico: qualunque scrittura di PLAN_KEY resta sincronizzata
+  // con la config fasce attiva in quel momento, senza doverci pensare ad
+  // ogni call site.
+  savePlanSlotSignature(currentSlotSignature());
 }
 
 function loadNamedPlans() {
@@ -295,6 +362,9 @@ function planEntrySnapshot(entry) {
 }
 function planEntrySavedAt(entry) {
   return entry && typeof entry === 'object' && entry.savedAt ? entry.savedAt : null;
+}
+function planEntrySlotSignature(entry) {
+  return entry && typeof entry === 'object' && entry.slotSignature ? entry.slotSignature : null;
 }
 function lastSavedPlanName(named) {
   let best = null;
@@ -333,6 +403,19 @@ function persistPlan(days) {
     day.slots.forEach(slot => { plan[day.weekdayNum + ':' + slot.key] = slot.active; });
   });
   savePlan(plan);
+}
+
+// il piano a schermo può essere un fallback ai default dovuto a un mismatch
+// tra la config fasce con cui PLAN_KEY fu salvato e quella attiva ora (vedi
+// planCompatStatus): in quel caso NON è il piano reale dell'utente per
+// questa config, quindi non va persistito — altrimenti il primo click su
+// una tile sovrascriverebbe per sempre il piano vero con dei default.
+function persistPlanGuarded(days) {
+  if (planCompatStatus !== 'compatible') {
+    renderPlanCompatBanner();
+    return;
+  }
+  persistPlan(days);
 }
 
 function planSnapshot(days) {
@@ -446,7 +529,7 @@ function renderPlan() {
   customizeBtn.title = T.customizeTitle;
   customizeBtn.setAttribute('aria-label', T.customizeTitle);
   customizeBtn.innerHTML = ICONS.extra16; // forma a cursori/equalizzatore, usata come icona "impostazioni"
-  customizeBtn.addEventListener('click', openCustomizeDialog);
+  customizeBtn.addEventListener('click', () => openCustomizeDialog());
   grid.appendChild(customizeBtn);
 
   // asse verticale: colonna 1 del grid, subgrid sulle righe delle fasce (righe 2..N+1)
@@ -493,7 +576,7 @@ function renderPlan() {
 
       cell.addEventListener('click', () => {
         slot.active = !slot.active;
-        persistPlan(planDays);
+        persistPlanGuarded(planDays);
         renderPlan();
       });
 
@@ -542,14 +625,18 @@ function refreshLoadSelect() {
   // resta quello che era già attivo, letto da PLAN_KEY come sempre)
   const last = lastSavedPlanName(named);
   if (last) select.value = last;
+  lastLoadSelectValue = select.value;
 }
 
 function setupPlanToolbar() {
   document.getElementById('reset-plan').addEventListener('click', () => {
     localStorage.removeItem(PLAN_KEY);
+    localStorage.removeItem(PLAN_SLOT_SIGNATURE_KEY);
     if (planDays) {
       planDays.forEach(day => day.slots.forEach(slot => { slot.active = defaultActive(day.weekdayNum, slot.key); }));
-      persistPlan(planDays);
+      persistPlan(planDays); // azione esplicita e intenzionale: il risultato è per definizione coerente con la config attiva
+      planCompatStatus = 'compatible';
+      renderPlanCompatBanner();
     }
     renderPlan();
   });
@@ -563,10 +650,11 @@ function setupPlanToolbar() {
       alert(T.maxPlansReached);
       return;
     }
-    named[name] = { snapshot: planSnapshot(planDays), savedAt: new Date().toISOString() };
+    named[name] = { snapshot: planSnapshot(planDays), savedAt: new Date().toISOString(), slotSignature: currentSlotSignature() };
     saveNamedPlans(named);
     refreshLoadSelect();
     document.getElementById('load-plan').value = name;
+    lastLoadSelectValue = name;
     input.value = '';
   });
 
@@ -574,17 +662,113 @@ function setupPlanToolbar() {
     const name = e.target.value;
     if (!name || !planDays) return;
     const named = loadNamedPlans();
-    const snapshot = planEntrySnapshot(named[name]);
+    const entry = named[name];
+    const snapshot = planEntrySnapshot(entry);
     if (!snapshot) return;
-    planDays.forEach(day => day.slots.forEach(slot => {
-      const key = day.weekdayNum + ':' + slot.key;
-      slot.active = Object.prototype.hasOwnProperty.call(snapshot, key) ? snapshot[key] : defaultActive(day.weekdayNum, slot.key);
-    }));
-    persistPlan(planDays);
-    renderPlan();
+
+    const namedCompat = planIsCompatibleWith(planEntrySlotSignature(entry), currentSlotSignature());
+    const currentUnsaved = planCompatStatus !== 'compatible';
+    if (namedCompat !== 'compatible' || currentUnsaved) {
+      openPlanConflictDialog(name, entry, namedCompat, currentUnsaved);
+      return; // non tocca planDays/PLAN_KEY finché l'utente non sceglie nel dialog
+    }
+    applyNamedPlan(name, entry);
   });
 
   refreshLoadSelect();
+}
+
+// valore mostrato dalla <select> "load-plan" prima di un tentativo di
+// caricamento: usato per riportarla lì se l'utente annulla dal dialog di
+// conflitto (vedi openPlanConflictDialog), invece di lasciarla sul nome che
+// non è stato effettivamente caricato.
+let lastLoadSelectValue = '';
+
+function applyNamedPlan(name, entry) {
+  const snapshot = planEntrySnapshot(entry);
+  planDays.forEach(day => day.slots.forEach(slot => {
+    const key = day.weekdayNum + ':' + slot.key;
+    slot.active = Object.prototype.hasOwnProperty.call(snapshot, key) ? snapshot[key] : defaultActive(day.weekdayNum, slot.key);
+  }));
+  persistPlan(planDays); // sicuro qui: il piano applicato è per definizione coerente con la config attiva
+  lastLoadSelectValue = name;
+  planCompatStatus = 'compatible';
+  renderPlanCompatBanner();
+  renderPlan();
+}
+
+// --- banner "piano non salvato per questa configurazione": visibile finché
+// planCompatStatus non è 'compatible' (vedi persistPlanGuarded). Non è un
+// <dialog> perché non deve bloccare l'uso della pagina: l'utente può
+// continuare a guardare i numeri, solo senza poterli salvare finché non
+// risolve. ---
+function renderPlanCompatBanner() {
+  const banner = document.getElementById('plan-compat-banner');
+  if (planCompatStatus === 'compatible') { banner.hidden = true; return; }
+  banner.hidden = false;
+  document.getElementById('plan-compat-banner-title').textContent = T.planCompatBannerTitle;
+  document.getElementById('plan-compat-banner-body').textContent =
+    planCompatStatus === 'unknown' ? T.planCompatBannerUnknownBody : T.planCompatBannerBody;
+  // "Rigenera comando" ha senso solo se conosciamo gli orari originali: in
+  // stato 'unknown' (dati legacy sotto una config custom precedente) non
+  // c'è nulla da cui ripartire.
+  document.getElementById('plan-compat-regenerate').hidden = planCompatStatus === 'unknown';
+}
+
+function setupPlanCompatBanner() {
+  document.getElementById('plan-compat-regenerate').addEventListener('click', () => {
+    const target = effectiveSignatureForCompatCheck(loadPlanSlotSignature());
+    if (!target) return;
+    openCustomizeDialog(target);
+    generateCustomizeCommand();
+  });
+  document.getElementById('plan-compat-adopt').addEventListener('click', () => {
+    if (!confirm(T.planCompatAdoptConfirm)) return;
+    persistPlan(planDays); // bypass intenzionale del guard: azione esplicita dell'utente
+    planCompatStatus = 'compatible';
+    renderPlanCompatBanner();
+  });
+}
+
+// --- dialog di conflitto al caricamento di un piano nominato incompatibile
+// con la config attiva (o quando il piano corrente a schermo non è ancora
+// salvato per questa config): propone di rigenerare il comando per tornare
+// alla config originale, oppure di annullare senza toccare nulla — mai un
+// fallback silenzioso ai default. ---
+function openPlanConflictDialog(name, entry, namedCompat, currentUnsaved) {
+  const namedPrefix = namedCompat === 'unknown' ? T.planConflictNamedUnknownBodyPrefix : T.planConflictNamedBodyPrefix;
+  const namedMiddle = namedCompat === 'unknown' ? T.planConflictNamedUnknownBodyMiddle : T.planConflictNamedBodyMiddle;
+  document.getElementById('plan-conflict-body-named').textContent = namedPrefix + name + namedMiddle;
+
+  const currentBody = document.getElementById('plan-conflict-body-current');
+  currentBody.hidden = !currentUnsaved;
+  if (currentUnsaved) currentBody.textContent = T.planConflictCurrentUnsavedBody;
+
+  const namedSignature = effectiveSignatureForCompatCheck(planEntrySlotSignature(entry));
+  const dialog = document.getElementById('plan-conflict-dialog');
+  const regenerateBtn = document.getElementById('plan-conflict-regenerate');
+  regenerateBtn.hidden = namedCompat === 'compatible' || !namedSignature;
+  regenerateBtn.onclick = () => {
+    dialog.close();
+    document.getElementById('load-plan').value = lastLoadSelectValue; // il piano nominato non è stato caricato, solo la sua config riproposta
+    openCustomizeDialog(namedSignature);
+    generateCustomizeCommand();
+  };
+
+  dialog.showModal();
+}
+
+function setupPlanConflictDialog() {
+  const dialog = document.getElementById('plan-conflict-dialog');
+  dialog.querySelector('form').addEventListener('submit', e => e.preventDefault());
+  // la select torna sempre al valore precedente su ogni via d'uscita che non
+  // carica davvero il piano nominato: bottone Annulla, e il tasto Esc nativo
+  // del <dialog> (evento 'cancel', distinto da 'close' — quest'ultimo non è
+  // stato affidabile in tutti i contesti, quindi si agisce esplicitamente
+  // sui due trigger invece di delegare a 'close').
+  const revert = () => { document.getElementById('load-plan').value = lastLoadSelectValue; };
+  document.getElementById('plan-conflict-cancel').addEventListener('click', () => { dialog.close(); revert(); });
+  dialog.addEventListener('cancel', revert);
 }
 
 // --- personalizzazione fasce/giorni: il pannello non scrive nulla da solo,
@@ -608,6 +792,7 @@ function renderCustomizeBoundaries() {
     input.addEventListener('change', () => {
       const v = parseFloat(input.value);
       if (!Number.isNaN(v)) customizeBoundaries[i] = v;
+      refreshCustomizeAffectedWarning();
     });
     row.appendChild(input);
     const removeBtn = document.createElement('button');
@@ -624,15 +809,47 @@ function renderCustomizeBoundaries() {
     row.appendChild(removeBtn);
     container.appendChild(row);
   });
+  refreshCustomizeAffectedWarning();
 }
 
-function openCustomizeDialog() {
-  customizeBoundaries = currentBoundaryHours().slice();
-  document.getElementById('customize-day-count').value = DAY_COUNT;
+// seedSignature: se presente, precompila il pannello con una config diversa
+// da quella attiva ora (es. la config sotto cui un piano incompatibile fu
+// salvato, per rigenerare il comando che la ripristina — vedi
+// openPlanConflictDialog/renderPlanCompatBanner). Senza, si parte dalla
+// config attualmente in uso, come sempre.
+function openCustomizeDialog(seedSignature) {
+  const sig = seedSignature || currentSlotSignature();
+  customizeBoundaries = sig.boundaries.slice();
+  document.getElementById('customize-day-count').value = sig.day_count;
   renderCustomizeBoundaries();
   document.getElementById('customize-error').hidden = true;
   document.getElementById('customize-result').hidden = true;
   document.getElementById('customize-dialog').showModal();
+}
+
+// quanti piani salvati (corrente + nominati) diventerebbero incompatibili
+// con una firma candidata — mostrato dal vivo nel pannello di
+// personalizzazione, PRIMA di generare il comando (vedi
+// refreshCustomizeAffectedWarning).
+function countAffectedPlans(candidateSignature) {
+  let affected = 0;
+  if (Object.keys(loadPlan()).length > 0 &&
+      planIsCompatibleWith(loadPlanSlotSignature(), candidateSignature) !== 'compatible') {
+    affected++;
+  }
+  const named = loadNamedPlans();
+  Object.keys(named).forEach(name => {
+    if (planIsCompatibleWith(planEntrySlotSignature(named[name]), candidateSignature) !== 'compatible') affected++;
+  });
+  return affected;
+}
+
+function refreshCustomizeAffectedWarning() {
+  const el = document.getElementById('customize-affected-plans');
+  const candidate = { boundaries: customizeBoundaries, day_count: DAY_COUNT }; // day_count non entra nel confronto di compatibilità
+  const n = countAffectedPlans(candidate);
+  el.hidden = n === 0;
+  if (n > 0) el.textContent = T.customizeAffectedPlansPrefix + n + T.customizeAffectedPlansMiddle;
 }
 
 function generateCustomizeCommand() {
@@ -711,6 +928,7 @@ function setLocale(lang) {
   localStorage.setItem(LANG_KEY, lang);
   T = STRINGS[LOCALE];
   applyStrings();
+  renderPlanCompatBanner(); // il banner (se visibile) mostra testo da T, non ricostruito da applyStrings
   refreshLoadSelect();
   renderTzOptions();
   refreshFormatUI();
@@ -876,7 +1094,12 @@ function render(data) {
   if (!planDays && data.reset_date) {
     const resetsAt = parseResetDate(data.reset_date);
     const dates = computeDisplayDays(resetsAt, DAY_COUNT);
-    planDays = buildDayModel(dates, loadPlan());
+    const storedPlan = loadPlan();
+    planDays = buildDayModel(dates, storedPlan);
+    planCompatStatus = Object.keys(storedPlan).length === 0
+      ? 'compatible' // nessun dato pregresso da proteggere
+      : planIsCompatibleWith(loadPlanSlotSignature(), currentSlotSignature());
+    renderPlanCompatBanner();
   }
   renderPlan();
 }
@@ -907,6 +1130,8 @@ async function poll() {
   // influenzano sia il testo (buildExplanationHTML) sia il modello del piano
   applyStrings();
   setupPlanToolbar();
+  setupPlanCompatBanner();
+  setupPlanConflictDialog();
   setupCustomizeDialog();
   setupThemeSwitch();
   setupTzControls();

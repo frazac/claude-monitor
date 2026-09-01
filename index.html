@@ -31,6 +31,15 @@
     <li class="hairline"><span class="stat-key" id="lbl-plan-target-day">soglia di fine giornata</span><span class="stat-val" id="plan-target-day">--%</span></li>
   </ul>
 
+  <div class="plan-compat-banner" id="plan-compat-banner" hidden>
+    <div class="plan-compat-banner-title" id="plan-compat-banner-title"></div>
+    <div class="plan-compat-banner-body" id="plan-compat-banner-body"></div>
+    <div class="plan-compat-banner-actions">
+      <button type="button" class="customize-generate-btn customize-action-btn-wrap" id="plan-compat-regenerate"></button>
+      <button type="button" class="customize-close-btn customize-action-btn-wrap" id="plan-compat-adopt"></button>
+    </div>
+  </div>
+
   <div class="hairline grid-hairline"></div>
   <div class="grid" id="grid"></div>
 
@@ -71,6 +80,7 @@
       </div>
 
       <p class="customize-warning" id="customize-warning"></p>
+      <p class="customize-affected-plans" id="customize-affected-plans" hidden></p>
       <p class="customize-error" id="customize-error" hidden></p>
 
       <div class="customize-actions">
@@ -82,6 +92,19 @@
         <span id="customize-result-intro"></span>
         <code id="customize-command"></code>
         <button type="button" class="customize-copy-btn" id="customize-copy"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="plan-conflict-dialog" class="customize-dialog">
+    <form method="dialog" class="customize-form">
+      <h2 id="plan-conflict-title"></h2>
+      <p id="plan-conflict-body-named"></p>
+      <p id="plan-conflict-body-current" hidden></p>
+
+      <div class="customize-actions">
+        <button type="button" class="customize-generate-btn customize-action-btn-wrap" id="plan-conflict-regenerate"></button>
+        <button type="button" class="customize-close-btn" id="plan-conflict-cancel"></button>
       </div>
     </form>
   </dialog>
