@@ -279,6 +279,7 @@ def log_write_source(data):
 
 def write_web_state(payload):
     try:
+        payload = {**payload, "script_dir": SCRIPT_DIR}
         os.makedirs(os.path.dirname(WEB_STATE_FILE), exist_ok=True)
         with open(WEB_STATE_FILE, "w") as f:
             json.dump(payload, f)

@@ -263,7 +263,6 @@ function applyStrings() {
   document.getElementById('lbl-made-with').innerHTML = T.madeWithPrefix +
     '<a href="https://short.masterismi.com/sitoistituzionale" target="_blank" rel="noopener">masterismi.com</a>' +
     T.madeWithSuffix;
-  document.getElementById('stream-banner-cmd').innerHTML = T.streamDisconnectedHint + '<br><code>python3 install-statusline.py</code>';
   setStreamBanner(streamConnected);
 
   document.getElementById('customize-title').textContent = T.customizeTitle;
@@ -286,12 +285,18 @@ function applyStrings() {
 }
 
 let streamConnected = false;
+let lastScriptDir = null;
 function setStreamBanner(connected) {
   streamConnected = connected;
   const banner = document.getElementById('stream-banner');
   banner.classList.toggle('connected', connected);
   banner.classList.toggle('disconnected', !connected);
   document.getElementById('stream-banner-title').textContent = connected ? T.streamConnected : T.streamDisconnected;
+  const cmd = lastScriptDir
+    ? "cd '" + lastScriptDir + "' && python3 install-statusline.py"
+    : 'python3 install-statusline.py';
+  document.getElementById('stream-banner-cmd').innerHTML = T.streamDisconnectedHint + '<br><code>' + escapeHTML(cmd) + '</code>' +
+    '<br>' + T.streamDisconnectedAlreadyWired;
 }
 
 function parseResetDate(str) {
@@ -1074,6 +1079,7 @@ function setUpdatedMessage(text, isError) {
 }
 
 function render(data) {
+  if (data && data.script_dir) lastScriptDir = data.script_dir;
   if (!data || data.status !== 'ok') {
     document.getElementById('week-pct').textContent = '--%';
     document.getElementById('hour-pct').textContent = '--%';
